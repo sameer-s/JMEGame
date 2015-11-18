@@ -81,9 +81,9 @@ public class ThirdPersonCharacter extends Node
         attachChild(model);
 
         // Initializes the animations to be used
-        AnimControl animControl = model.getControl(AnimControl.class);
-        animChannel = animControl.createChannel();
-        animChannel.setAnim(this.anims.idleAnim);
+//        AnimControl animControl = model.getControl(AnimControl.class);
+//        animChannel = animControl.createChannel();
+//        animChannel.setAnim(this.anims.idleAnim);
         // Attaches the camera object to 'this'
         this.cam = new ThirdPersonCamera("CamNode", cam, this,
                 cameraProperties);
@@ -253,6 +253,11 @@ public class ThirdPersonCharacter extends Node
      */
     private void handleAnimations() throws NullPointerException
     {
+        if (animChannel == null)
+        {
+            return;
+        }
+
         if (control.isOnGround())
         {
             if (left || right || forward || backward)
