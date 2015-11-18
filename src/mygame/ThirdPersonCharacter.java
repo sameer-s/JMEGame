@@ -17,6 +17,7 @@ import com.jme3.scene.CameraNode;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.control.CameraControl;
+import java.util.ArrayList;
 
 import mygame.ThirdPersonCharacter.ThirdPersonCamera.CameraProperties;
 
@@ -33,7 +34,18 @@ public class ThirdPersonCharacter extends Node
             right = false;
     private BetterCharacterControl control;
     private ThirdPersonCamera cam;
-    private AnimChannel animChannel;
+    private ArrayList<AnimChannel> animChannels;
+    private static final String[] bodyNodes = new String[]{
+        "Beards",
+        "Body",
+        "Bottoms",
+        "Eyelashes",
+        "Eyes",
+        "Hair",
+        "Moustaches",
+        "Shoes",
+        "Tops"
+    };
     // The current walk direction of th
     private Vector3f walkDirection = new Vector3f();
 
@@ -80,10 +92,18 @@ public class ThirdPersonCharacter extends Node
         // Attaches the model to be used with this object
         attachChild(model);
 
-        // Initializes the animations to be used
-//        AnimControl animControl = model.getControl(AnimControl.class);
-//        animChannel = animControl.createChannel();
-//        animChannel.setAnim(this.anims.idleAnim);
+        animChannels = new ArrayList<AnimChannel>();
+        for(String bodyNode : bodyNodes)
+        {
+             // Initializes the animations to be used
+            Spatial bodyPart = ((Node) model).getChild(bodyNode);
+            AnimControl animControl = bodyPart.getControl(AnimControl.class);
+
+            AnimChannel animChannel = animControl.createChannel();
+            animChannel.setAnim(this.anims.idleAnim);
+            
+            animChannels.add(animChannel);
+        }
         // Attaches the camera object to 'this'
         this.cam = new ThirdPersonCamera("CamNode", cam, this,
                 cameraProperties);
@@ -251,7 +271,7 @@ public class ThirdPersonCharacter extends Node
      *
      * @throws NullPointerException If the animations don't exist
      */
-    private void handleAnimations() throws NullPointerException
+    private void handleAnimations(AnimChannel animChannel) throws NullPointerException
     {
         if (animChannel == null)
         {
@@ -311,12 +331,15 @@ public class ThirdPersonCharacter extends Node
         control.setWalkDirection(
                 walkDirection.normalize().multLocal(movement.walkSpeed));
 
-        try
+        for(AnimChannel animChannel : animChannels)
         {
-            // handleAnimations(); TODO
-        } catch (NullPointerException npe)
-        {
-            npe.printStackTrace(System.err);
+            try
+            {
+                handleAnimations(animChannel);
+            } catch (NullPointerException npe)
+            {
+                npe.printStackTrace(System.err);
+            }
         }
     }
 
