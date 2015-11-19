@@ -97,20 +97,13 @@ public class ThirdPersonCharacter extends Node
 
         animChannels = new ArrayList<>();
 
-        final Node armatureNode = (Node) this.getChild("Armature");
-
         for (String bodyNode : bodyNodes)
         {
-            AnimControl animControl;
-            if (bodyNode == null)
-            {
-                animControl = armatureNode.getControl(AnimControl.class);
-            } else
-            {
-                // Initializes the animations to be used
-                Spatial bodyPart = armatureNode.getChild(bodyNode);
-                animControl = bodyPart.getControl(AnimControl.class);
-            }
+            bodyNode = bodyNode == null ? "Armature" : bodyNode;
+                
+            // Initializes the animations to be used
+            Spatial bodyPart = this.getChild(bodyNode);
+            AnimControl animControl = bodyPart.getControl(AnimControl.class);
 
             System.out.println(animControl.getAnimationNames().toString());
 
@@ -285,9 +278,9 @@ public class ThirdPersonCharacter extends Node
     /**
      * Handles those animations that need extra handling
      *
-     * @throws NullPointerException If the animations don't exist
+     * @throws IllegalArgumentException If the animations don't exist
      */
-    private void handleAnimations(AnimChannel animChannel) throws NullPointerException, IllegalArgumentException
+    private void handleAnimations(AnimChannel animChannel) throws IllegalArgumentException
     {
         if (animChannel == null)
         {
@@ -349,12 +342,20 @@ public class ThirdPersonCharacter extends Node
 
         for (AnimChannel animChannel : animChannels)
         {
+            boolean caught = false;
             try
             {
                 handleAnimations(animChannel);
-            } catch (NullPointerException | IllegalArgumentException e)
+            } catch (IllegalArgumentException e)
             {
-                e.printStackTrace(System.err);
+                System.err.println("Animation " + animChannel.getAnimationName() + " does not exist for controller " + animChannel.getControl().getSpatial().getName() + ".");
+                caught = true;
+            } finally
+            {
+                if(!caught)
+                {
+                    System.out.println("Animation " + animChannel.getAnimationName() + " exists for controller " + animChannel.getControl().getSpatial().getName() + ".");
+                }
             }
         }
     }
