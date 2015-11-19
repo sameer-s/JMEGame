@@ -53,9 +53,16 @@ public class Main extends SimpleApplication
         playerModel.scale(1.2f);
         // playerModel.setLocalTranslation(0f, 0f, 0f);
         playerModel.rotate(0f, 180f * FastMath.DEG_TO_RAD, 0f);
-        player = new ThirdPersonCharacter(playerModel, inputManager, cam,
-                new Animations("Armature.001Action", "Walk"), Movement.DEFAULT,
-                SpatialProperties.DEFAULT, CameraProperties.DEFAULT);
+
+        player = new ThirdPersonCharacter(
+                playerModel,
+                inputManager,
+                cam,
+                new Animations("Armature.001Action", "Walk"),
+                Movement.DEFAULT,
+                SpatialProperties.DEFAULT,
+                CameraProperties.DEFAULT);
+
         player.getControl().warp(new Vector3f(-5f, 2f, 5f));
         rootNode.attachChild(player);
         bulletAppState.getPhysicsSpace().add(player);

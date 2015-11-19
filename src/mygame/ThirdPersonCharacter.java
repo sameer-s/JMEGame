@@ -35,7 +35,9 @@ public class ThirdPersonCharacter extends Node
     private BetterCharacterControl control;
     private ThirdPersonCamera cam;
     private ArrayList<AnimChannel> animChannels;
-    private static final String[] bodyNodes = new String[]{
+    private static final String[] bodyNodes = new String[]
+    {
+        //null,
         "Beards",
         "Body",
         "Bottoms",
@@ -46,7 +48,7 @@ public class ThirdPersonCharacter extends Node
         "Shoes",
         "Tops"
     };
-    // The current walk direction of th
+    // The current walk direction of the character
     private Vector3f walkDirection = new Vector3f();
 
     /* USER DEFINED PROPERTIES */
@@ -61,6 +63,7 @@ public class ThirdPersonCharacter extends Node
      * Constructs a third person character using ALL user defined properties
      *
      * @param model The 3d model of the character
+     * @param modelPath The path of the model, used in initializing anims
      * @param inputManager The input manager to initialize key presses
      * @param cam The camera to attach to the player
      * @param anims The animations for the player to use
@@ -92,16 +95,28 @@ public class ThirdPersonCharacter extends Node
         // Attaches the model to be used with this object
         attachChild(model);
 
-        animChannels = new ArrayList<AnimChannel>();
-        for(String bodyNode : bodyNodes)
+        animChannels = new ArrayList<>();
+
+        final Node armatureNode = (Node) this.getChild("Armature");
+
+        for (String bodyNode : bodyNodes)
         {
-             // Initializes the animations to be used
-            Spatial bodyPart = ((Node) model).getChild(bodyNode);
-            AnimControl animControl = bodyPart.getControl(AnimControl.class);
+            AnimControl animControl;
+            if (bodyNode == null)
+            {
+                animControl = armatureNode.getControl(AnimControl.class);
+            } else
+            {
+                // Initializes the animations to be used
+                Spatial bodyPart = armatureNode.getChild(bodyNode);
+                animControl = bodyPart.getControl(AnimControl.class);
+            }
+
+            System.out.println(animControl.getAnimationNames().toString());
 
             AnimChannel animChannel = animControl.createChannel();
             animChannel.setAnim(this.anims.idleAnim);
-            
+
             animChannels.add(animChannel);
         }
         // Attaches the camera object to 'this'
@@ -114,6 +129,7 @@ public class ThirdPersonCharacter extends Node
      * properties
      *
      * @param model The 3d model of the character
+     * @param modelPath The path of the model, used in initializing anims
      * @param inputManager The input manager to initialize key presses
      * @param cam The camera to attach to the player
      */
@@ -271,7 +287,7 @@ public class ThirdPersonCharacter extends Node
      *
      * @throws NullPointerException If the animations don't exist
      */
-    private void handleAnimations(AnimChannel animChannel) throws NullPointerException
+    private void handleAnimations(AnimChannel animChannel) throws NullPointerException, IllegalArgumentException
     {
         if (animChannel == null)
         {
@@ -331,14 +347,14 @@ public class ThirdPersonCharacter extends Node
         control.setWalkDirection(
                 walkDirection.normalize().multLocal(movement.walkSpeed));
 
-        for(AnimChannel animChannel : animChannels)
+        for (AnimChannel animChannel : animChannels)
         {
             try
             {
                 handleAnimations(animChannel);
-            } catch (NullPointerException npe)
+            } catch (NullPointerException | IllegalArgumentException e)
             {
-                npe.printStackTrace(System.err);
+                e.printStackTrace(System.err);
             }
         }
     }
