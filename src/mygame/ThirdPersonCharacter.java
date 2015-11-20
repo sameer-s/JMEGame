@@ -37,7 +37,7 @@ public class ThirdPersonCharacter extends Node
     private ArrayList<AnimChannel> animChannels;
     private static final String[] bodyNodes = new String[]
     {
-        //null,
+        null,
         "Beards",
         "Body",
         "Bottoms",
@@ -99,8 +99,15 @@ public class ThirdPersonCharacter extends Node
 
         for (String bodyNode : bodyNodes)
         {
-            bodyNode = bodyNode == null ? "Armature" : bodyNode;
+            // Checks if the 'master' node is being used
+            if(bodyNode == null)
+            {
+                bodyNode = "Armature";
                 
+                // Compatibility code
+                model.scale(0.01f);
+            }
+         
             // Initializes the animations to be used
             Spatial bodyPart = this.getChild(bodyNode);
             AnimControl animControl = bodyPart.getControl(AnimControl.class);
