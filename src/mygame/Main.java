@@ -58,7 +58,7 @@ public class Main extends SimpleApplication
                 playerModel,
                 inputManager,
                 cam,
-                new Animations("Idle", "Walk"),
+                new Animations("Idle", "Running"),
                 Movement.DEFAULT,
                 SpatialProperties.DEFAULT,
                 CameraProperties.DEFAULT);
