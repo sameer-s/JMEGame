@@ -37,7 +37,6 @@ public class ThirdPersonCharacter extends Node
     private ArrayList<AnimChannel> animChannels;
     private static final String[] bodyNodes = new String[]
     {
-        null,
         "Beards",
         "Body",
         "Bottoms",
@@ -63,7 +62,6 @@ public class ThirdPersonCharacter extends Node
      * Constructs a third person character using ALL user defined properties
      *
      * @param model The 3d model of the character
-     * @param modelPath The path of the model, used in initializing anims
      * @param inputManager The input manager to initialize key presses
      * @param cam The camera to attach to the player
      * @param anims The animations for the player to use
@@ -99,15 +97,6 @@ public class ThirdPersonCharacter extends Node
 
         for (String bodyNode : bodyNodes)
         {
-            // Checks if the 'master' node is being used
-            if(bodyNode == null)
-            {
-                bodyNode = "Armature";
-                
-                // Compatibility code
-                model.scale(0.01f);
-            }
-         
             // Initializes the animations to be used
             Spatial bodyPart = this.getChild(bodyNode);
             AnimControl animControl = bodyPart.getControl(AnimControl.class);
@@ -129,7 +118,6 @@ public class ThirdPersonCharacter extends Node
      * properties
      *
      * @param model The 3d model of the character
-     * @param modelPath The path of the model, used in initializing anims
      * @param inputManager The input manager to initialize key presses
      * @param cam The camera to attach to the player
      */
@@ -370,6 +358,7 @@ public class ThirdPersonCharacter extends Node
     /**
      * Gets the BetterCharacterControl controller object associated with this
      * object
+     * @return The controller object
      */
     public BetterCharacterControl getControl()
     {
