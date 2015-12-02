@@ -49,16 +49,18 @@ public class Main extends SimpleApplication
         bulletAppState.getPhysicsSpace().add(scene);
 
         Spatial playerModel = assetManager
-                .loadModel("Models/MainCharacter/MainCharacter_exp.j3o");
+                .loadModel("Models/SpaceCraft/Rocket.mesh.xml");
         playerModel.scale(1.2f);
         // playerModel.setLocalTranslation(0f, 0f, 0f);
         playerModel.rotate(0f, 180f * FastMath.DEG_TO_RAD, 0f);
 
+        Animations anims = new Animations("Idle", "** Running");
+        
         player = new ThirdPersonCharacter(
                 playerModel,
                 inputManager,
                 cam,
-                new Animations("Idle", "Running"),
+                anims,
                 Movement.DEFAULT,
                 SpatialProperties.DEFAULT,
                 CameraProperties.DEFAULT);

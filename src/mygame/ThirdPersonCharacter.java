@@ -92,11 +92,10 @@ public class ThirdPersonCharacter extends Node
 
         // Attaches the model to be used with this object
         attachChild(model);
-
+ 
         animChannels = new ArrayList<>();
-
         for (String bodyNode : bodyNodes)
-        {
+        {    
             // Initializes the animations to be used
             Spatial bodyPart = this.getChild(bodyNode);
             AnimControl animControl = bodyPart.getControl(AnimControl.class);
@@ -104,10 +103,12 @@ public class ThirdPersonCharacter extends Node
             System.out.println(animControl.getAnimationNames().toString());
 
             AnimChannel animChannel = animControl.createChannel();
-            animChannel.setAnim(this.anims.idleAnim);
 
             animChannels.add(animChannel);
         }
+        
+        this.setCurrentAnim(anims.idleAnim, LoopMode.Cycle);
+        
         // Attaches the camera object to 'this'
         this.cam = new ThirdPersonCamera("CamNode", cam, this,
                 cameraProperties);
@@ -272,36 +273,50 @@ public class ThirdPersonCharacter extends Node
 
     /**
      * Handles those animations that need extra handling
-     *
-     * @throws IllegalArgumentException If the animations don't exist
      */
-    private void handleAnimations(AnimChannel animChannel) throws IllegalArgumentException
+    private void handleAnimations()
     {
-        if (animChannel == null)
+        if(animChannels.isEmpty())
         {
             return;
         }
-
+        
         if (control.isOnGround())
         {
             if (left || right || forward || backward)
-            {
-                if (!animChannel.getAnimationName().equals(anims.moveAnim))
+            {      
+                if(!animChannels.get(0).getAnimationName().equals(anims.moveAnim))
                 {
-                    animChannel.setAnim(anims.moveAnim, .3f);
-                    animChannel.setLoopMode(LoopMode.Loop);
+                    setCurrentAnim(anims.moveAnim, LoopMode.Cycle);
                 }
             } else
             {
-                if (!animChannel.getAnimationName().equals(anims.idleAnim))
-                {
-                    animChannel.setAnim(anims.idleAnim, .3f);
-                    animChannel.setLoopMode(LoopMode.Cycle);
-                }
+                setCurrentAnim(anims.idleAnim, LoopMode.Cycle);
             }
         }
     }
 
+    /**
+     * Sets the current animation for the player. Passes a string, which should
+     * ALWAYS have been retrieved from the Animations object.
+     * @param anim 
+     */
+    private void setCurrentAnim(String anim, LoopMode loopMode)
+    {
+        for(AnimChannel animChannel : animChannels)
+        {   
+            try
+            {
+                animChannel.setAnim(anim);
+                animChannel.setLoopMode(loopMode);
+            }
+            catch(IllegalArgumentException iae)
+            {
+                System.err.println("No such animation " + anim + " for " + animChannel.getControl().getSpatial().getName() + ".");
+            }
+        }
+    }
+    
     /**
      * To be called from the main 'simpleUpdate' method Updates the camera and
      * movement; handles animations
@@ -335,24 +350,7 @@ public class ThirdPersonCharacter extends Node
         control.setWalkDirection(
                 walkDirection.normalize().multLocal(movement.walkSpeed));
 
-        for (AnimChannel animChannel : animChannels)
-        {
-            boolean caught = false;
-            try
-            {
-                handleAnimations(animChannel);
-            } catch (IllegalArgumentException e)
-            {
-                System.err.println("Animation " + animChannel.getAnimationName() + " does not exist for controller " + animChannel.getControl().getSpatial().getName() + ".");
-                caught = true;
-            } finally
-            {
-                if(!caught)
-                {
-                    System.out.println("Animation " + animChannel.getAnimationName() + " exists for controller " + animChannel.getControl().getSpatial().getName() + ".");
-                }
-            }
-        }
+        handleAnimations();
     }
 
     /**
