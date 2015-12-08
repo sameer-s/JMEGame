@@ -19,7 +19,7 @@ import com.jme3.scene.Spatial;
 import com.jme3.scene.control.CameraControl;
 import java.util.ArrayList;
 
-import mygame.ThirdPersonCharacter.ThirdPersonCamera.CameraProperties;
+import mygame.ThirdPersonCharacter_old.ThirdPersonCamera.CameraProperties;
 
 /**
  * A class to control a "3rd person character". Adapted from the tutorial.
@@ -27,7 +27,7 @@ import mygame.ThirdPersonCharacter.ThirdPersonCamera.CameraProperties;
  * @author Sameer
  *
  */
-public class ThirdPersonCharacter extends Node
+public class ThirdPersonCharacter_old extends Node
         implements ActionListener, AnalogListener
 {
     private boolean forward = false, backward = false, left = false,
@@ -69,7 +69,7 @@ public class ThirdPersonCharacter extends Node
      * @param properties The spatial properties for the player to use
      * @param cameraProperties The properties for the camera to use
      */
-    public ThirdPersonCharacter(Spatial model, InputManager inputManager,
+    public ThirdPersonCharacter_old(Spatial model, InputManager inputManager,
             Camera cam, Animations anims, Movement movement,
             SpatialProperties properties, CameraProperties cameraProperties)
     {
@@ -122,7 +122,7 @@ public class ThirdPersonCharacter extends Node
      * @param inputManager The input manager to initialize key presses
      * @param cam The camera to attach to the player
      */
-    public ThirdPersonCharacter(Spatial model, InputManager inputManager,
+    public ThirdPersonCharacter_old(Spatial model, InputManager inputManager,
             Camera cam)
     {
         this(model, inputManager, cam, Animations.DEFAULT, Movement.DEFAULT,

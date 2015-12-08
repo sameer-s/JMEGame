@@ -9,15 +9,11 @@ import com.jme3.light.DirectionalLight;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
-
-import mygame.ThirdPersonCharacter.Animations;
-import mygame.ThirdPersonCharacter.Movement;
-import mygame.ThirdPersonCharacter.SpatialProperties;
-import mygame.ThirdPersonCharacter.ThirdPersonCamera.CameraProperties;
+import java.util.HashMap;
 
 public class Main extends SimpleApplication
 {
-    private ThirdPersonCharacter player;
+    private ThirdPersonCharacterControl playerController;
 
     public static void main(String... args)
     {
@@ -49,26 +45,23 @@ public class Main extends SimpleApplication
         bulletAppState.getPhysicsSpace().add(scene);
 
         Spatial playerModel = assetManager
-                .loadModel("Models/SpaceCraft/Rocket.mesh.xml");
-        playerModel.scale(1.2f);
-        // playerModel.setLocalTranslation(0f, 0f, 0f);
-        playerModel.rotate(0f, 180f * FastMath.DEG_TO_RAD, 0f);
-
-        Animations anims = new Animations("Idle", "** Running");
+                .loadModel("Models/MainCharacter3/MainCharacter3.j3o");
         
-        player = new ThirdPersonCharacter(
-                playerModel,
-                inputManager,
-                cam,
-                anims,
-                Movement.DEFAULT,
-                SpatialProperties.DEFAULT,
-                CameraProperties.DEFAULT);
+        playerModel.scale(2.f);
+        playerModel.rotate(0f, 180f * FastMath.DEG_TO_RAD, 0f);
+        playerModel.setLocalTranslation(-5f, 2f, 5f);
+        
+        HashMap<String, String> anims = new HashMap<>();
+        anims.put("Idle", "Idle");
+               
+        playerController = new ThirdPersonCharacterControl(inputManager, anims, playerModel);
+        playerController.setCamera(cam);
+        playerModel.addControl(playerController);
+        
+        rootNode.attachChild(playerModel);
+        bulletAppState.getPhysicsSpace().add(playerModel);
 
-        player.getControl().warp(new Vector3f(-5f, 2f, 5f));
-        rootNode.attachChild(player);
-        bulletAppState.getPhysicsSpace().add(player);
-
+        
         DirectionalLight sun = new DirectionalLight();
         sun.setDirection(new Vector3f(-.1f, -.7f, -1f));
         rootNode.addLight(sun);
@@ -77,7 +70,7 @@ public class Main extends SimpleApplication
     @Override
     public void simpleUpdate(float tpf)
     {
-        player.update();
+        playerController.update(tpf);
     }
 
     @SuppressWarnings("unused")
