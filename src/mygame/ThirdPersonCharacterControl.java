@@ -71,14 +71,19 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
             
             switch(bodyNode)
             {
-                case "":
-                    break;
+                case "Bottoms":
+                    int numBones = control.getSkeleton().getBoneCount();
+                    for(int i = 0; i < numBones; i++)
+                    {
+                        System.out.println("Bone: " + control.getSkeleton().getBone(i).getName());
+                    }
+                    //break;
                 default:
+                    animChannels.put(bodyNode, control.createChannel());
                     break;
                     
             }
           
-            animChannels.put(bodyNode, control.createChannel());
         }
         
         setAnim("Idle");
@@ -184,8 +189,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
     public void update(float tpf)
     {
         super.update(tpf);
-        Vector3f modelForwardDir = 
-        spatial.getWorldRotation().mult(Vector3f.UNIT_Z);
+        Vector3f modelForwardDir = spatial.getWorldRotation().mult(Vector3f.UNIT_Z);
         Vector3f modelLeftDir = spatial.getWorldRotation().
         mult(Vector3f.UNIT_X);
         walkDirection.set(0, 0, 0);
@@ -207,6 +211,27 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
             walkDirection.addLocal(modelLeftDir.negate().
             multLocal(moveSpeed));
         }
+        
+        if(forward || backward || left || right)
+        {
+            if(!getAnim("Bottoms").equals("Move"))
+//            if(!getAnim().equals("Move"))
+            {
+                setAnim("Move", "Bottoms", "Shoes");
+//                setAnim("Move");
+            }
+        }
+        else
+        {
+            if(!getAnim("Bottoms").equals("Idle"))
+//            if(!getAnim().equals("Idle"))
+            {
+//                setAnim("Idle", "Bottoms", "Shoes");
+                setAnim("Idle");
+            }
+        }
+        
+        
     }
     
     @Override
@@ -254,11 +279,32 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         
         for(String channel : channels)
         {
-            animChannels.get(channel).setAnim(anim);
+            animChannels.get(channel).setAnim(animations.get(anim));
             if(loopMode != null)
             {
                 animChannels.get(channel).setLoopMode(loopMode);
             }
         }
+    }
+    
+    private String getAnim()
+    {
+        return getAnim(animChannels.keySet().iterator().next());
+    }
+    private String getAnim(String channel)
+    {
+        String anim = animChannels.get(channel).getAnimationName();
+        String animKey = anim;
+        
+        for(String key : animations.keySet())
+        {
+            if(anim.equals(animations.get(key)))
+            {
+                animKey = key;
+                break;
+            }
+        }
+            
+        return animKey;
     }
 }

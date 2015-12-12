@@ -53,6 +53,7 @@ public class Main extends SimpleApplication
         
         HashMap<String, String> anims = new HashMap<>();
         anims.put("Idle", "Idle");
+        anims.put("Move", "Running");
                
         playerController = new ThirdPersonCharacterControl(inputManager, anims, playerModel);
         playerController.setCamera(cam);
