@@ -5,6 +5,7 @@ import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
+import com.jme3.input.ChaseCamera;
 import com.jme3.light.DirectionalLight;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
@@ -51,12 +52,25 @@ public class Main extends SimpleApplication
         playerModel.rotate(0f, 180f * FastMath.DEG_TO_RAD, 0f);
         playerModel.setLocalTranslation(-5f, 2f, 5f);
         
+        ChaseCamera chaseCam = new ChaseCamera(cam, playerModel, inputManager);
+        chaseCam.setDragToRotate(false);
+        chaseCam.setSmoothMotion(true);
+        chaseCam.setLookAtOffset(new Vector3f(0, 1f, 0));
+        chaseCam.setDefaultDistance(7f);
+        chaseCam.setMaxDistance(8f);
+        chaseCam.setMinDistance(6f);
+        chaseCam.setUpVector(Vector3f.UNIT_Y);
+        chaseCam.setChasingSensitivity(5f);
+        chaseCam.setRotationSpeed(2f);
+        
+        
         HashMap<String, String> anims = new HashMap<>();
         anims.put("Idle", "Idle");
         anims.put("Move", "Running");
                
         playerController = new ThirdPersonCharacterControl(inputManager, anims, playerModel);
-        playerController.setCamera(cam);
+        playerController.cam = cam;
+        //playerController.setCamera(cam);
         playerModel.addControl(playerController);
         
         rootNode.attachChild(playerModel);

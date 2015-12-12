@@ -40,6 +40,8 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
 
     private HashMap<String, AnimChannel> animChannels = new HashMap<>();
     public HashMap<String, String> animations;
+    
+    public Camera cam;
 
     private static final String[] bodyNodes = new String[]
     {
@@ -189,9 +191,8 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
     public void update(float tpf)
     {
         super.update(tpf);
-        Vector3f modelForwardDir = spatial.getWorldRotation().mult(Vector3f.UNIT_Z);
-        Vector3f modelLeftDir = spatial.getWorldRotation().
-        mult(Vector3f.UNIT_X);
+        Vector3f modelForwardDir = cam.getRotation().mult(Vector3f.UNIT_Z).multLocal(1, 0, 1);
+        Vector3f modelLeftDir = cam.getRotation().mult(Vector3f.UNIT_X);
         walkDirection.set(0, 0, 0);
         if (forward)
         {
@@ -211,7 +212,15 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
             walkDirection.addLocal(modelLeftDir.negate().
             multLocal(moveSpeed));
         }
+        handleAnimations();
         
+        viewDirection.set(walkDirection);
+        setViewDirection(walkDirection);
+    }
+    
+    
+    private void handleAnimations()
+    {
         if(forward || backward || left || right)
         {
             if(!getAnim("Bottoms").equals("Move"))
@@ -230,8 +239,6 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
                 setAnim("Idle");
             }
         }
-        
-        
     }
     
     @Override
@@ -249,6 +256,8 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         CameraNode camNode = new CameraNode("CamNode", cam);
         camNode.setControlDir(CameraControl.ControlDirection.SpatialToCamera);
         head.attachChild(camNode);
+        
+        this.cam = cam;
         
         // Third Person Stuff
         camNode.setLocalTranslation(new Vector3f(0, cameraFollowDistance, -cameraFollowDistance));
