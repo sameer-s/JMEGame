@@ -187,35 +187,49 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         head.setLocalRotation(new Quaternion().fromAngles(yaw, 0, 0));
     }
     
+    Vector3f forwardVector = new Vector3f();
+    
     @Override
     public void update(float tpf)
     {
         super.update(tpf);
         Vector3f modelForwardDir = cam.getRotation().mult(Vector3f.UNIT_Z).multLocal(1, 0, 1);
         Vector3f modelLeftDir = cam.getRotation().mult(Vector3f.UNIT_X);
+        
         walkDirection.set(0, 0, 0);
         if (forward)
         {
             walkDirection.addLocal(modelForwardDir.mult(moveSpeed));
-        }
+            
+            forwardVector.set(0, 0, 0);
+            forwardVector.addLocal(walkDirection);
+         }
         else if (backward)
         {
-            walkDirection.addLocal(modelForwardDir.negate().
-            multLocal(moveSpeed));
+            walkDirection.addLocal(modelForwardDir.negate().multLocal(moveSpeed));
+            
+            forwardVector.set(0, 0, 0);
+            forwardVector.addLocal(walkDirection);
         }   
         if (left)
         {
             walkDirection.addLocal(modelLeftDir.mult(moveSpeed));
+            
+            forwardVector.set(0, 0, 0);
+            forwardVector.addLocal(walkDirection);
         }
         else if (right)
         {
-            walkDirection.addLocal(modelLeftDir.negate().
-            multLocal(moveSpeed));
+            walkDirection.addLocal(modelLeftDir.negate().multLocal(moveSpeed));
+            
+            forwardVector.set(0, 0, 0);
+            forwardVector.addLocal(walkDirection);
         }
+        
         handleAnimations();
         
-        viewDirection.set(walkDirection);
-        setViewDirection(walkDirection);
+        viewDirection.set(forwardVector);
+        setViewDirection(forwardVector);
     }
     
     

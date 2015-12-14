@@ -28,9 +28,8 @@ public class Main extends SimpleApplication
         // Disables the default diagnostic
         setDisplayFps(false);
         setDisplayStatView(false);
-
-        mouseInput.setCursorVisible(false);
-        flyCam.setEnabled(false);
+        
+//        flyCam.setEnabled(false);
 
         BulletAppState bulletAppState = new BulletAppState();
         stateManager.attach(bulletAppState);
@@ -53,6 +52,7 @@ public class Main extends SimpleApplication
         playerModel.setLocalTranslation(-5f, 2f, 5f);
         
         ChaseCamera chaseCam = new ChaseCamera(cam, playerModel, inputManager);
+        chaseCam.setHideCursorOnRotate(true);
         chaseCam.setDragToRotate(false);
         chaseCam.setSmoothMotion(true);
         chaseCam.setLookAtOffset(new Vector3f(0, 1f, 0));
@@ -60,9 +60,9 @@ public class Main extends SimpleApplication
         chaseCam.setMaxDistance(8f);
         chaseCam.setMinDistance(6f);
         chaseCam.setUpVector(Vector3f.UNIT_Y);
-        chaseCam.setChasingSensitivity(5f);
+//        chaseCam.setChasingSensitivity(5f);
+        chaseCam.setTrailingEnabled(false);
         chaseCam.setRotationSpeed(2f);
-        
         
         HashMap<String, String> anims = new HashMap<>();
         anims.put("Idle", "Idle");
