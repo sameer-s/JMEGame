@@ -237,19 +237,15 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
     {
         if(forward || backward || left || right)
         {
-            if(!getAnim("Bottoms").equals("Move"))
-//            if(!getAnim().equals("Move"))
+            if(!getAnim().equals("Move"))
             {
-                setAnim("Move", "Bottoms", "Shoes");
-//                setAnim("Move");
+                setAnim("Move");
             }
         }
         else
         {
             if(!getAnim("Bottoms").equals("Idle"))
-//            if(!getAnim().equals("Idle"))
             {
-//                setAnim("Idle", "Bottoms", "Shoes");
                 setAnim("Idle");
             }
         }

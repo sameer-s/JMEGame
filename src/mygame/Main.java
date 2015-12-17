@@ -45,7 +45,7 @@ public class Main extends SimpleApplication
         bulletAppState.getPhysicsSpace().add(scene);
 
         Spatial playerModel = assetManager
-                .loadModel("Models/MainCharacter3/MainCharacter3.j3o");
+                .loadModel("Models/MainCharacterMale/MainCharacter3_2.j3o");
         
         playerModel.scale(2.f);
         playerModel.rotate(0f, 180f * FastMath.DEG_TO_RAD, 0f);
