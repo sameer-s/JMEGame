@@ -37,6 +37,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
     private static final float _radius = .5f, _height = 1f, _mass = 1f;
     
     // The instance of the JME camera class that we use to find out which way the player is looking.
+    @SuppressWarnings("FieldMayBeFinal")
     private Camera cam;
 
     // A field for mapping Strings to animation channels. This is useful because
@@ -44,10 +45,12 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
     // and animation channels for different parts of the body (see the bodyNodes
     // constant). Due to this, it is easiest to just abstract it a bit, and map
     // each channel to a name.
+    @SuppressWarnings("FieldMayBeFinal")
     private HashMap<String, AnimChannel> animChannels = new HashMap<>();
     // A field for mapping names to the names of animations (which may vary 
     // from model to model) This way, it is easy to add new animations; all you 
     // have to do is add a new entry to the Map.
+    @SuppressWarnings("FieldMayBeFinal")
     private HashMap<String, String> animations;
     
     // The array that stores the names that Mixamo uses for each body part.
@@ -308,8 +311,9 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         // For each animation channel [name]
         for(String channel : channels)
         {
-            // Get the AnimChannel object corresponding to the name
-            animChannels.get(channel).setAnim(animations.get(anim));
+            // Sets the animation for the object
+            // Gives it 0.3 seconds to blend the animation
+            animChannels.get(channel).setAnim(animations.get(anim), 0.3f);
             // If the loopmode is null, don't change the loop mode
             if(loopMode != null)
             {
