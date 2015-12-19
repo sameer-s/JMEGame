@@ -72,7 +72,7 @@ public class Main extends SimpleApplication
 
         // Loads the model for our player
         Spatial playerModel = assetManager
-                .loadModel("Models/MainCharacterMale/MainCharacter3_2.j3o");
+                .loadModel("Models/MainCharacter3_2/MainCharacter3_2.j3o");
         // Makes some adjustment so it works properly
         playerModel.scale(2.f);
         playerModel.rotate(0f, 180f * FastMath.DEG_TO_RAD, 0f);
@@ -95,7 +95,7 @@ public class Main extends SimpleApplication
         // for animations to that the model uses.
         HashMap<String, String> anims = new HashMap<>();
         anims.put("Idle", "Idle");
-        anims.put("Move", "Running");
+        anims.put("Move", "Running3");
                
         // Creates our new character controller, passing in a few necessary parameters. 
         playerController = new ThirdPersonCharacterControl(inputManager, anims, playerModel, cam);
