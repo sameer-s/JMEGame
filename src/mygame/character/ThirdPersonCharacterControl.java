@@ -30,6 +30,7 @@ import com.jme3.renderer.Camera;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import java.util.HashMap;
+import mygame.network.PlayerInformationMessage;
 
 /**
  * A class to control the third person character.
@@ -379,5 +380,31 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
 
         // Return the animation key provided to you
         return animKey;
+    }
+
+    /**
+     * Converts this object into a message to be networked.
+     * @return The message.
+     */
+    public PlayerInformationMessage toMessage()
+    {
+        // Constructs the message
+        PlayerInformationMessage message = new PlayerInformationMessage();
+
+        // Initializes the array that holds the number of
+        message.currentAnims = new String[bodyNodes.length];
+        for(int i = 0; i < bodyNodes.length; i++)
+        {
+            message.currentAnims[i] = getAnim(bodyNodes[i]);
+        }
+
+        // Gets the location and rotation data from this object and puts it in the messaeg
+        message.location = new float[]
+            {location.x, location.y, location.z};
+        message.rotation = new float[]
+            {rotation.getW(), rotation.getX(), rotation.getY(), rotation.getZ()};
+
+        // Returns the message
+        return message;
     }
 }
