@@ -1,3 +1,7 @@
+/*
+ * © 2015 Sameer Suri. All rights reserved.
+ */
+
 package mygame;
 
 import com.jme3.app.SimpleApplication;
@@ -6,11 +10,13 @@ import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
 import com.jme3.input.ChaseCamera;
+import com.jme3.input.controls.KeyTrigger;
 import com.jme3.light.DirectionalLight;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
 import java.util.HashMap;
+import org.lwjgl.input.Keyboard;
 
 /**
  * The main class for my game. It has a number of purposes:
@@ -29,7 +35,7 @@ public class Main extends SimpleApplication
      * @param args The command line arguments passed
      */
     public static void main(String... args)
-    {        
+    {
         // Creates a new instance of our game and starts it.
         Main gp = new Main();
         gp.start();
@@ -44,7 +50,7 @@ public class Main extends SimpleApplication
         // Disables the default diagnostic
         setDisplayFps(false);
         setDisplayStatView(false);
-        
+
         // Sets up the Bullet Physics Engine
         BulletAppState bulletAppState = new BulletAppState();
         stateManager.attach(bulletAppState);
@@ -77,7 +83,7 @@ public class Main extends SimpleApplication
         playerModel.scale(2.f);
         playerModel.rotate(0f, 180f * FastMath.DEG_TO_RAD, 0f);
         playerModel.setLocalTranslation(-5f, 2f, 5f);
-        
+
         // Creates the chase camera. The chase camera is a camera which rotates
         // and zooms around the player. There are some configuration changes
         // I made, which I detail below:
@@ -90,28 +96,32 @@ public class Main extends SimpleApplication
         chaseCam.setDefaultDistance(7f);
         // Speeds up the rotation, as the default is quite slow.
         chaseCam.setRotationSpeed(2f);
-        
+
         // Maps the names that the Third Person Character Controller class uses
         // for animations to that the model uses.
         HashMap<String, String> anims = new HashMap<>();
         anims.put("Idle", "Idle");
         anims.put("Move", "Running3");
-               
-        // Creates our new character controller, passing in a few necessary parameters. 
+
+        // Creates our new character controller, passing in a few necessary parameters.
         playerController = new ThirdPersonCharacterControl(inputManager, anims, playerModel, cam);
         // Attaches the control to the player model
         playerModel.addControl(playerController);
-        
+
         // Attaches the model to the root node
         // This makes it appear in the world
         rootNode.attachChild(playerModel);
         // Registers the model with the Bullet Physics Engine
         bulletAppState.getPhysicsSpace().add(playerModel);
-        
+
         // Creates a sun (a light) so that the player can see.
         DirectionalLight sun = new DirectionalLight();
         sun.setDirection(new Vector3f(-.1f, -.7f, -1f));
         rootNode.addLight(sun);
+
+        // Registers the GUI-based console with the keyboard listeners
+        GUIConsole console = new GUIConsole();
+        console.initKeys(inputManager, new KeyTrigger(Keyboard.KEY_T));
     }
 
     /**

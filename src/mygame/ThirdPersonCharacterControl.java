@@ -1,3 +1,7 @@
+/*
+ * © 2015 Sameer Suri. All rights reserved.
+ */
+
 package mygame;
 
 import com.jme3.animation.AnimChannel;
@@ -32,10 +36,10 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
 
     // Constants describing the movement of the character
     private static final float moveSpeed = 10f, jumpBoost = 2;
-    
+
     // Constants describing the physical characteristics of the character
     private static final float _radius = .5f, _height = 1f, _mass = 1f;
-    
+
     // The instance of the JME camera class that we use to find out which way the player is looking.
     @SuppressWarnings("FieldMayBeFinal")
     private Camera cam;
@@ -47,12 +51,12 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
     // each channel to a name.
     @SuppressWarnings("FieldMayBeFinal")
     private HashMap<String, AnimChannel> animChannels = new HashMap<>();
-    // A field for mapping names to the names of animations (which may vary 
-    // from model to model) This way, it is easy to add new animations; all you 
+    // A field for mapping names to the names of animations (which may vary
+    // from model to model) This way, it is easy to add new animations; all you
     // have to do is add a new entry to the Map.
     @SuppressWarnings("FieldMayBeFinal")
     private HashMap<String, String> animations;
-    
+
     // The array that stores the names that Mixamo uses for each body part.
     private static final String[] bodyNodes = new String[]
     {
@@ -66,7 +70,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         "Shoes",
         "Tops"
     };
-    
+
     /**
      * Constructor for the control.
      * @param man The input manager, so the control can map certain keypresses to movement
@@ -81,17 +85,17 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         // creates a Bullet Physics entity to the player, given a radius, height,
         // and mass (this would be represented as a capsule shape)
         super(_radius, _height, _mass);
-        
+
         // Initializes the keypresses. Given its own method for readability.
         initKeys(man);
-        
+
         // Increases the jump force depending on how much it is boosted in the
         // corresponding constant.
         this.setJumpForce(this.getJumpForce().mult(jumpBoost));
-        
+
         // Stores the animations map in an instance variable
         this.animations = animations;
-        
+
         // This loops over each of the body parts that are created with the
         // Mixamo FUSE tool for creating characters
         for(String bodyNode : bodyNodes)
@@ -100,24 +104,24 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
             Spatial bodyPart = ((Node) spatial).getChild(bodyNode);
             // Finds the animation controller put in by Mixamo
             AnimControl control = bodyPart.getControl(AnimControl.class);
-            
+
             // Creates a new animation channel so that we can use it to set
             // animations later, and stores it in our HashMap
             animChannels.put(bodyNode, control.createChannel());
         }
-        
+
         // Stores the camera in an instance variable
         this.cam = cam;
-        
+
         // Sets the current animation to the idle animation
         setAnim("Idle");
     }
-    
+
    private void initKeys(InputManager inputManager)
     {
         // Binds keys to their respective actions
         // For now, there is movement and jumping
-        
+
         // This one binds forward movement to the W key
         inputManager.addMapping("Forward", new KeyTrigger(KeyInput.KEY_W));
         // This one binds left movement to the A key
@@ -126,7 +130,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         inputManager.addMapping("Backward", new KeyTrigger(KeyInput.KEY_S));
         // This one binds right movement to the D key
         inputManager.addMapping("Right", new KeyTrigger(KeyInput.KEY_D));
-        
+
         // This one binds jumping to the spacebar
         inputManager.addMapping("Jump", new KeyTrigger(KeyInput.KEY_SPACE));
 
@@ -139,7 +143,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         inputManager.addListener(this, "Right");
         inputManager.addListener(this, "Jump");
     }
-   
+
    /**
     * Notifies the character controller when a button event occurs.
     * @param action The name of the button event
@@ -147,7 +151,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
     * @param tpf Time since the last frame
     */
     @Override
-    public void onAction(String action, boolean isPressed, float tpf) 
+    public void onAction(String action, boolean isPressed, float tpf)
     {
         switch (action)
         {
@@ -159,7 +163,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
                 left = isPressed;
                 break;
             case "Backward":
-                backward = isPressed; 
+                backward = isPressed;
                 break;
             case "Right":
                 right = isPressed;
@@ -175,12 +179,12 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
             /* Note: jump and duck are methods created in the superclass */
         }
     }
-    
+
     // Contains the direction that is currently 'forward', for the character
     Vector3f forwardVector = new Vector3f();
-    
+
     /**
-     * Handles movement as the game goes on. 
+     * Handles movement as the game goes on.
      * @param tpf Time since the last update event.
      */
     @Override
@@ -188,18 +192,18 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
     {
         // Has the superclass take care of some stuff
         super.update(tpf);
-        
+
         // Gets the current direction of the CAMERA
         Vector3f modelForwardDir = cam.getRotation().mult(Vector3f.UNIT_Z).multLocal(1, 0, 1);
         Vector3f modelLeftDir = cam.getRotation().mult(Vector3f.UNIT_X);
-        
+
         // walkDirection keeps track of the direction that the player walks in
         walkDirection.set(0, 0, 0);
         if (forward)
         {
             // If it is going forward, go in the forward direction (times the speed)
             walkDirection.addLocal(modelForwardDir.mult(moveSpeed));
-            
+
             // Then set the current forward direction as that.
             forwardVector.set(0, 0, 0);
             forwardVector.addLocal(walkDirection);
@@ -208,16 +212,16 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         {
             // If it is going backward, go in the negative forward direction (times the speed)
             walkDirection.addLocal(modelForwardDir.negate().multLocal(moveSpeed));
-            
+
             // Then set the current forward direction as that.
             forwardVector.set(0, 0, 0);
             forwardVector.addLocal(walkDirection);
-        }   
+        }
         if (left)
         {
             // If it is going left, go in the left direction (times the speed)
             walkDirection.addLocal(modelLeftDir.mult(moveSpeed));
-            
+
             // Then set the current forward direction as that.
             forwardVector.set(0, 0, 0);
             forwardVector.addLocal(walkDirection);
@@ -226,12 +230,12 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         {
             // If it is going right, go in the negative left direction (times the speed)
             walkDirection.addLocal(modelLeftDir.negate().multLocal(moveSpeed));
-            
+
             // Then set the current forward direction as that.
             forwardVector.set(0, 0, 0);
             forwardVector.addLocal(walkDirection);
         }
-        
+
         // Handle the movement animations
         handleAnimations();
 
@@ -240,7 +244,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         // Does the same thing for the physics engine
         setViewDirection(forwardVector);
     }
-    
+
     /**
      * Handles animations on the player
      * To be called in an update loop (from the update method)
@@ -271,7 +275,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
 
     // A few different overloads of a method that do the same thing:
     // set the current animation.
-    
+
     /**
      * Sets the current animation.
      * The loop mode will stay the same, and the animation will be applied
@@ -282,7 +286,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
     {
         setAnim(anim, (LoopMode) null);
     }
-    
+
     /**
      * Sets the current animation.
      * The loop mode will stay the same.
@@ -293,7 +297,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
     {
         setAnim(anim, null, channels);
     }
-    
+
     /**
      * Sets the current animation.
      * @param anim The animation to switch to.
@@ -322,7 +326,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
             }
         }
     }
-    
+
     /**
      * Gets the current animation.
      * It does this by checking the current animation on the first element of
@@ -335,7 +339,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         // set of all animation channels.
         return getAnim(animChannels.keySet().iterator().next());
     }
-    
+
     /**
      * Gets the current animation for a given animation channel.
      * @param channel The name of the animation channel to check.
@@ -347,7 +351,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         String anim = animChannels.get(channel).getAnimationName();
         // Creates a variable to store the corresponding key (the name of the animation in our naming system)
         String animKey = anim;
-       
+
         // For each possible animation key
         for(String key : animations.keySet())
         {
@@ -359,7 +363,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
                 break;
             }
         }
-        
+
         // Return the animation key provided to you
         return animKey;
     }
