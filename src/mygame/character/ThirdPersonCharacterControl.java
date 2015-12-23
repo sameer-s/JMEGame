@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package mygame;
+package mygame.character;
 
 import com.jme3.animation.AnimChannel;
 import com.jme3.animation.AnimControl;

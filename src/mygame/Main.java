@@ -17,6 +17,8 @@
 
 package mygame;
 
+import mygame.character.ThirdPersonCharacterControl;
+import mygame.gui.GUIConsole;
 import com.jme3.app.SimpleApplication;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.collision.shapes.CollisionShape;
