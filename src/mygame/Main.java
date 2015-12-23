@@ -18,32 +18,19 @@
 package mygame;
 
 import com.jme3.app.SimpleApplication;
-import com.jme3.bullet.BulletAppState;
-import com.jme3.bullet.collision.shapes.CollisionShape;
-import com.jme3.bullet.control.RigidBodyControl;
-import com.jme3.bullet.util.CollisionShapeFactory;
-import com.jme3.input.ChaseCamera;
-import com.jme3.input.controls.KeyTrigger;
-import com.jme3.light.DirectionalLight;
-import com.jme3.math.FastMath;
-import com.jme3.math.Vector3f;
+import com.jme3.app.state.AppState;
 import com.jme3.network.Client;
-import com.jme3.network.Network;
-import com.jme3.network.serializing.Serializer;
-import com.jme3.scene.Spatial;
-import java.io.IOException;
-import java.util.HashMap;
 import mygame.character.ThirdPersonCharacterControl;
-import mygame.gui.GUIConsole;
-import mygame.network.PlayerInformationMessage;
-import mygame.network.ServerMain;
-import org.lwjgl.input.Keyboard;
+import mygame.game.InitAppState;
+import mygame.game.PlayAppState;
 
 /**
  * The main class for my game. It has a number of purposes:
  * This is the starting point for the game.
  * Handles the init and update methods provided by the API.
  * Handles the controllers (i.e. player controller) used in this game.
+ *
+ * This is now implemented in AppStates, which can be found in the package: mygame.game
  *
  * Note that this is for the client application, not the server.
  * The server main class can be found at: mygame.network.ServerMain.java
@@ -54,7 +41,7 @@ public class Main extends SimpleApplication
     /**
      * The player controller for the player controlled by THIS client
      */
-    private ThirdPersonCharacterControl playerController;
+    public ThirdPersonCharacterControl playerController;
 
     /**
      * Starting point for the application.
@@ -70,7 +57,11 @@ public class Main extends SimpleApplication
     /**
      * The networking client.
      */
-    private Client client;
+    public Client client;
+
+    public boolean isPlayer1;
+
+    private AppState currentAppState;
 
     /**
      * Called by the engine in order to start the game.
@@ -78,136 +69,14 @@ public class Main extends SimpleApplication
     @Override
     public void simpleInitApp()
     {
+        // 2 game states:
+        // Init -> Play
+        currentAppState = new InitAppState();
+        stateManager.attach(currentAppState);
+
         // Disables the default diagnostic
         setDisplayFps(false);
         setDisplayStatView(false);
-
-        // Sets up the Bullet Physics Engine
-        BulletAppState bulletAppState = new BulletAppState();
-        stateManager.attach(bulletAppState);
-
-        // Loads the model used for the scene
-        Spatial sceneModel = assetManager
-                .loadModel("Scenes/ManyLights/Main.scene");
-        // Scales it to make it a little short
-        sceneModel.scale(1f, .5f, 1f);
-        // Generates a collider for physics collisions
-        CollisionShape sceneShape = CollisionShapeFactory
-                .createMeshShape(sceneModel);
-        // Creates a control. What a control does is tell what it's controlling
-        // what exactly to do. A Rigid Body Control is very simple: it's a rigid
-        // body, meaning it does basically nothing. The rigid body is for the
-        // scene, which needs not move.
-        RigidBodyControl scene = new RigidBodyControl(sceneShape, 0);
-        // Attaches the control to our model
-        sceneModel.addControl(scene);
-        // Attaches the model to the root node
-        // This makes it appear in the world
-        rootNode.attachChild(sceneModel);
-        // Registers the model with the Bullet Physics Engine
-        bulletAppState.getPhysicsSpace().add(scene);
-
-        // Loads the model for our player
-        Spatial playerModel = assetManager
-                .loadModel("Models/MainCharacter3_2/MainCharacter3_2.j3o");
-        // Makes some adjustment so it works properly
-        playerModel.scale(2.f);
-        playerModel.rotate(0f, 180f * FastMath.DEG_TO_RAD, 0f);
-        playerModel.setLocalTranslation(-5f, 2f, 5f);
-
-        // Creates the chase camera. The chase camera is a camera which rotates
-        // and zooms around the player. There are some configuration changes
-        // I made, which I detail below:
-        ChaseCamera chaseCam = new ChaseCamera(cam, playerModel, inputManager);
-        // By default, you have to push down a mouse button to rotate the chase cam. This disables that.
-        chaseCam.setDragToRotate(false);
-        // By default, it looks at the player model's (0,0,0), which is at its feet. This looks a bit higher.
-        chaseCam.setLookAtOffset(new Vector3f(0, 1f, 0));
-        // This keeps the camera a bit closer to the player than the default. This can be changed by the scroll wheel (on the mouse).
-        chaseCam.setDefaultDistance(7f);
-        // Speeds up the rotation, as the default is quite slow.
-        chaseCam.setRotationSpeed(2f);
-
-        // Maps the names that the Third Person Character Controller class uses
-        // for animations to that the model uses.
-        HashMap<String, String> anims = new HashMap<>();
-        anims.put("Idle", "Idle");
-        anims.put("Move", "Running3");
-
-        // Creates our new character controller, passing in a few necessary parameters.
-        playerController = new ThirdPersonCharacterControl(inputManager, anims, playerModel, cam);
-        // Attaches the control to the player model
-        playerModel.addControl(playerController);
-
-        // Attaches the model to the root node
-        // This makes it appear in the world
-        rootNode.attachChild(playerModel);
-        // Registers the model with the Bullet Physics Engine
-        bulletAppState.getPhysicsSpace().add(playerModel);
-
-        // Creates a sun (a light) so that the player can see.
-        DirectionalLight sun = new DirectionalLight();
-        sun.setDirection(new Vector3f(-.1f, -.7f, -1f));
-        rootNode.addLight(sun);
-
-        // Registers the custom message classes for networking
-        Serializer.registerClass(PlayerInformationMessage.class);
-
-        try
-        {
-            // Initializes the networking client
-            client = Network.connectToServer("localhost", ServerMain.PORT);
-            client.start();
-        }
-        catch(IOException e)
-        {
-            System.err.println("UNABLE TO CONNECT TO SERVER ON PORT: " + ServerMain.PORT);
-            System.err.println("STACK TRACE:");
-            e.printStackTrace(System.err);
-        }
-
-        // A lambda expression that decides what do with the commands from the GUI console.
-        GUIConsole.CommandRunner commandRunner =
-            (cmd) -> {
-                // If nothing was inputted, do nothing!
-                if(cmd == null) return;
-
-                // Gets the first word in the command.
-                switch(cmd.split(" ")[0])
-                {
-                    case "send":
-                        break;
-                    default:
-                        break;
-                }
-            };
-
-        // Registers the GUI-based console
-        GUIConsole console = new GUIConsole();
-        console.initKeys(inputManager, new KeyTrigger(Keyboard.KEY_T), commandRunner);
-    }
-
-
-    /**
-     * Called in a loop by the engine to allow the game to make changes.
-     * @param tpf "Time per frame"; the amount of time taken between the last update cycle and this one
-     */
-    @Override
-    public void simpleUpdate(float tpf)
-    {
-        // Updates the player controller, allowing it to move the player and handle animation changes.
-        playerController.update(tpf);
-    }
-
-    /**
-     * A simple logger. Will be removed.
-     * @param tag A tag to log the data with
-     * @param val The data
-     */
-    @SuppressWarnings("unused")
-    private void log(Object tag, Object val)
-    {
-        System.out.println(tag.toString() + ": " + val.toString());
     }
 
     /**
@@ -222,5 +91,21 @@ public class Main extends SimpleApplication
 
         // Has the superclass finish cleanup
         super.destroy();
+    }
+
+    public void nextAppState()
+    {
+        // Init -> Play
+        // IN THE FUTURE:
+        // Play -> Menu
+        // Menu -> Play
+
+        stateManager.detach(currentAppState);
+
+        if(currentAppState instanceof InitAppState)
+        {
+            currentAppState = new PlayAppState();
+            stateManager.attach(currentAppState);
+        }
     }
 }

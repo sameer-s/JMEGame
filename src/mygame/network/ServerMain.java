@@ -18,18 +18,24 @@ package mygame.network;
 
 import com.jme3.app.SimpleApplication;
 import com.jme3.network.ConnectionListener;
+import com.jme3.network.Filters;
 import com.jme3.network.HostedConnection;
+import com.jme3.network.Message;
+import com.jme3.network.MessageListener;
 import com.jme3.network.Network;
 import com.jme3.network.Server;
 import com.jme3.network.serializing.Serializer;
 import com.jme3.system.JmeContext;
 import java.io.IOException;
+import mygame.network.message.ConnectionRequestMessage;
+import mygame.network.message.ConnectionRequestMessage.ConnectionStatus;
+import mygame.network.message.PlayerInformationMessage;
 
 /**
  * The server that takes care of networking.
  * @author Sameer Suri
  */
-public class ServerMain extends SimpleApplication implements ConnectionListener
+public class ServerMain extends SimpleApplication implements ConnectionListener, MessageListener<HostedConnection>
 {
     /**
      * The port to host the server on.
@@ -52,6 +58,7 @@ public class ServerMain extends SimpleApplication implements ConnectionListener
     {
         // Registers our custom message type with the networking system
         Serializer.registerClass(PlayerInformationMessage.class);
+        Serializer.registerClass(ConnectionRequestMessage.class);
 
         try
         {
@@ -61,6 +68,8 @@ public class ServerMain extends SimpleApplication implements ConnectionListener
 
             // Adds the connection listener so we can be notified when a client connects or leaves
             server.addConnectionListener(this);
+            // Allows this to recieve messages from clients
+            server.addMessageListener(this);
         }
         catch(IOException e)
         {
@@ -68,8 +77,6 @@ public class ServerMain extends SimpleApplication implements ConnectionListener
             System.err.println("STACK TRACE:");
             e.printStackTrace(System.err);
         }
-
-
     }
 
     /**
@@ -99,20 +106,6 @@ public class ServerMain extends SimpleApplication implements ConnectionListener
     @Override
     public void connectionAdded(Server server, HostedConnection conn)
     {
-        if(player1 == null)
-        {
-            player1 = conn;
-            System.out.println("Player 1 connected. ID = " + conn.getId());
-        }
-        else if (player2 == null)
-        {
-            player2 = conn;
-            System.out.println("Player 2 connected. ID = " + conn.getId());
-        }
-        else
-        {
-            conn.close("No more space on this server.");
-        }
     }
 
     @Override
@@ -127,6 +120,53 @@ public class ServerMain extends SimpleApplication implements ConnectionListener
         {
             player2 = null;
             System.out.println("Player 2 disconnected. ID = " + conn.getId());
+        }
+    }
+
+    // When a client sends a message
+
+    @Override
+    public void messageReceived(HostedConnection source, Message m)
+    {
+        if(m instanceof ConnectionRequestMessage)
+        {
+            ConnectionRequestMessage crm = new ConnectionRequestMessage();
+            crm.setReliable(true);
+
+            if(player1 == null)
+            {
+                player1 = source;
+                crm.status = ConnectionStatus.PLAYER1;
+                System.out.println("Player 1 connected. ID = " + source.getId());
+            }
+            else if (player2 == null)
+            {
+                player2 = source;
+                crm.status = ConnectionStatus.PLAYER2;
+                System.out.println("Player 2 connected. ID = " + source.getId());
+            }
+            else
+            {
+                crm.status = ConnectionStatus.REQUEST_DENIED;
+            }
+
+            System.out.println("Assigning connection status: " + crm.status.toString());
+            source.send(crm);
+        }
+        else if(m instanceof PlayerInformationMessage)
+        {
+            if(player1 == null || player2 == null) return;
+
+            if(source.equals(player1))
+            {
+                // This message came from player 1, pass it on to player 2
+                server.broadcast(Filters.in(player2), m);
+            }
+            else if(source.equals(player2))
+            {
+                // This message came from player 2, pass it on to player 1
+                server.broadcast(Filters.in(player1), m);
+            }
         }
     }
 }

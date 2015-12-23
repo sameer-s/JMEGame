@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package mygame.network;
+package mygame.network.message;
 
 import com.jme3.network.AbstractMessage;
 import com.jme3.network.serializing.Serializable;

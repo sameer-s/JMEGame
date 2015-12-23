@@ -30,7 +30,7 @@ import com.jme3.renderer.Camera;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import java.util.HashMap;
-import mygame.network.PlayerInformationMessage;
+import mygame.network.message.PlayerInformationMessage;
 
 /**
  * A class to control the third person character.
@@ -404,6 +404,10 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         message.rotation = new float[]
             {rotation.getW(), rotation.getX(), rotation.getY(), rotation.getZ()};
 
+        // Tells the message to use UDP rather than TCP protocol
+        // TCP -> slow, reliable (no packet loss)
+        // UDP -> fast, unreliable (packet loss)
+        message.setReliable(false);
         // Returns the message
         return message;
     }
