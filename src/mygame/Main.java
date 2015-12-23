@@ -17,8 +17,6 @@
 
 package mygame;
 
-import mygame.character.ThirdPersonCharacterControl;
-import mygame.gui.GUIConsole;
 import com.jme3.app.SimpleApplication;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.collision.shapes.CollisionShape;
@@ -29,8 +27,16 @@ import com.jme3.input.controls.KeyTrigger;
 import com.jme3.light.DirectionalLight;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
+import com.jme3.network.Client;
+import com.jme3.network.Network;
+import com.jme3.network.serializing.Serializer;
 import com.jme3.scene.Spatial;
+import java.io.IOException;
 import java.util.HashMap;
+import mygame.character.ThirdPersonCharacterControl;
+import mygame.gui.GUIConsole;
+import mygame.network.PlayerInformationMessage;
+import mygame.network.ServerMain;
 import org.lwjgl.input.Keyboard;
 
 /**
@@ -38,11 +44,16 @@ import org.lwjgl.input.Keyboard;
  * This is the starting point for the game.
  * Handles the init and update methods provided by the API.
  * Handles the controllers (i.e. player controller) used in this game.
+ *
+ * Note that this is for the client application, not the server.
+ * The server main class can be found at: mygame.network.ServerMain.java
  * @author Sameer Suri
  */
 public class Main extends SimpleApplication
 {
-    // Holds a reference to our player controller
+    /**
+     * The player controller for the player controlled by THIS client
+     */
     private ThirdPersonCharacterControl playerController;
 
     /**
@@ -55,6 +66,11 @@ public class Main extends SimpleApplication
         Main gp = new Main();
         gp.start();
     }
+
+    /**
+     * The networking client.
+     */
+    private Client client;
 
     /**
      * Called by the engine in order to start the game.
@@ -134,10 +150,43 @@ public class Main extends SimpleApplication
         sun.setDirection(new Vector3f(-.1f, -.7f, -1f));
         rootNode.addLight(sun);
 
-        // Registers the GUI-based console with the keyboard listeners
+        // Registers the custom message classes for networking
+        Serializer.registerClass(PlayerInformationMessage.class);
+
+        try
+        {
+            // Initializes the networking client
+            client = Network.connectToServer("localhost", ServerMain.PORT);
+            client.start();
+        }
+        catch(IOException e)
+        {
+            System.err.println("UNABLE TO CONNECT TO SERVER ON PORT: " + ServerMain.PORT);
+            System.err.println("STACK TRACE:");
+            e.printStackTrace(System.err);
+        }
+
+        // A lambda expression that decides what do with the commands from the GUI console.
+        GUIConsole.CommandRunner commandRunner =
+            (cmd) -> {
+                // If nothing was inputted, do nothing!
+                if(cmd == null) return;
+
+                // Gets the first word in the command.
+                switch(cmd.split(" ")[0])
+                {
+                    case "send":
+                        break;
+                    default:
+                        break;
+                }
+            };
+
+        // Registers the GUI-based console
         GUIConsole console = new GUIConsole();
-        console.initKeys(inputManager, new KeyTrigger(Keyboard.KEY_T));
+        console.initKeys(inputManager, new KeyTrigger(Keyboard.KEY_T), commandRunner);
     }
+
 
     /**
      * Called in a loop by the engine to allow the game to make changes.
@@ -159,5 +208,19 @@ public class Main extends SimpleApplication
     private void log(Object tag, Object val)
     {
         System.out.println(tag.toString() + ": " + val.toString());
+    }
+
+    /**
+     * Cleans up resources, closes the window, and kills the app.
+     */
+    @Override
+    public void destroy()
+    {
+        // Stops the networking to end the connection cleanly
+        if(client != null)
+            client.close();
+
+        // Has the superclass finish cleanup
+        super.destroy();
     }
 }
