@@ -18,7 +18,6 @@ package mygame.network;
 
 import com.jme3.app.SimpleApplication;
 import com.jme3.network.ConnectionListener;
-import com.jme3.network.Filters;
 import com.jme3.network.HostedConnection;
 import com.jme3.network.Message;
 import com.jme3.network.MessageListener;
@@ -29,6 +28,7 @@ import com.jme3.system.JmeContext;
 import java.io.IOException;
 import mygame.network.message.ConnectionRequestMessage;
 import mygame.network.message.ConnectionRequestMessage.ConnectionStatus;
+import mygame.network.message.PlayerConnectionMessage;
 import mygame.network.message.PlayerInformationMessage;
 
 /**
@@ -57,8 +57,9 @@ public class ServerMain extends SimpleApplication implements ConnectionListener,
     public void simpleInitApp()
     {
         // Registers our custom message type with the networking system
-        Serializer.registerClass(PlayerInformationMessage.class);
-        Serializer.registerClass(ConnectionRequestMessage.class);
+        Serializer.registerClasses(PlayerInformationMessage.class,
+                           ConnectionRequestMessage.class,
+                           PlayerConnectionMessage.class);
 
         try
         {
@@ -115,11 +116,23 @@ public class ServerMain extends SimpleApplication implements ConnectionListener,
         {
             player1 = null;
             System.out.println("Player 1 disconnected. ID = " + conn.getId());
+
+            if(player2 != null)
+            {
+                System.out.println("Informing player 2...");
+                player2.send(new PlayerConnectionMessage().setIsConnection(false).setReliable(true));
+            }
         }
         else if (conn.equals(player2))
         {
             player2 = null;
             System.out.println("Player 2 disconnected. ID = " + conn.getId());
+
+            if(player1 != null)
+            {
+                System.out.println("Informing player 1...");
+                player1.send(new PlayerConnectionMessage().setIsConnection(false).setReliable(true));
+            }
         }
     }
 
@@ -138,12 +151,22 @@ public class ServerMain extends SimpleApplication implements ConnectionListener,
                 player1 = source;
                 crm.status = ConnectionStatus.PLAYER1;
                 System.out.println("Player 1 connected. ID = " + source.getId());
+
+                if(player2 != null)
+                {
+                    player2.send(new PlayerConnectionMessage().setIsConnection(true).setReliable(true));
+                }
             }
             else if (player2 == null)
             {
                 player2 = source;
                 crm.status = ConnectionStatus.PLAYER2;
                 System.out.println("Player 2 connected. ID = " + source.getId());
+
+                if(player1 != null)
+                {
+                    player1.send(new PlayerConnectionMessage().setIsConnection(true).setReliable(true));
+                }
             }
             else
             {
@@ -160,12 +183,12 @@ public class ServerMain extends SimpleApplication implements ConnectionListener,
             if(source.equals(player1))
             {
                 // This message came from player 1, pass it on to player 2
-                server.broadcast(Filters.in(player2), m);
+                player2.send(m);
             }
             else if(source.equals(player2))
             {
                 // This message came from player 2, pass it on to player 1
-                server.broadcast(Filters.in(player1), m);
+                player1.send(m);
             }
         }
     }

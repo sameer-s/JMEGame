@@ -19,10 +19,16 @@ package mygame;
 
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AppState;
+import com.jme3.font.BitmapFont;
 import com.jme3.network.Client;
+import com.jme3.scene.Spatial;
+import com.jme3.system.AppSettings;
+import mygame.character.NetworkedCharacterControl;
 import mygame.character.ThirdPersonCharacterControl;
 import mygame.game.InitAppState;
 import mygame.game.PlayAppState;
+import mygame.game.WaitingAppState;
+import mygame.network.ClientMessageListener;
 
 /**
  * The main class for my game. It has a number of purposes:
@@ -38,10 +44,17 @@ import mygame.game.PlayAppState;
  */
 public class Main extends SimpleApplication
 {
+    public Spatial box;
+
     /**
      * The player controller for the player controlled by THIS client
      */
     public ThirdPersonCharacterControl playerController;
+
+    /**
+     * The player controller for the player controlled by the OTHER client
+     */
+    public NetworkedCharacterControl networkedController;
 
     /**
      * Starting point for the application.
@@ -59,6 +72,8 @@ public class Main extends SimpleApplication
      */
     public Client client;
 
+    public ClientMessageListener clientMessageListener;
+
     public boolean isPlayer1;
 
     private AppState currentAppState;
@@ -69,6 +84,8 @@ public class Main extends SimpleApplication
     @Override
     public void simpleInitApp()
     {
+        flyCam.setEnabled(false);
+
         // 2 game states:
         // Init -> Play
         currentAppState = new InitAppState();
@@ -95,17 +112,48 @@ public class Main extends SimpleApplication
 
     public void nextAppState()
     {
-        // Init -> Play
+        // Init -> (Wait) -> Play
+        // Wait may not occur, only for player 1
         // IN THE FUTURE:
         // Play -> Menu
         // Menu -> Play
 
         stateManager.detach(currentAppState);
 
+        boolean newStateAttached = true;
         if(currentAppState instanceof InitAppState)
         {
+            if(this.isPlayer1)
+            {
+                currentAppState = new WaitingAppState();
+            }
+            else
+            {
+                currentAppState = new PlayAppState();
+            }
+        }
+        else if(currentAppState instanceof WaitingAppState)
+        {
             currentAppState = new PlayAppState();
+        }
+        else
+        {
+            newStateAttached = false;
+        }
+
+        if(newStateAttached)
+        {
             stateManager.attach(currentAppState);
         }
+    }
+
+    public BitmapFont getGuiFont()
+    {
+        return guiFont;
+    }
+
+    public AppSettings getSettings()
+    {
+        return settings;
     }
 }

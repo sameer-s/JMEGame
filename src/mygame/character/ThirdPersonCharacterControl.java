@@ -52,7 +52,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
     private static final float moveSpeed = 10f, jumpBoost = 2;
 
     // Constants describing the physical characteristics of the character
-    private static final float _radius = .5f, _height = 1f, _mass = 1f;
+    static final float _radius = .5f, _height = 1f, _mass = 1f;
 
     // The instance of the JME camera class that we use to find out which way the player is looking.
     @SuppressWarnings("FieldMayBeFinal")

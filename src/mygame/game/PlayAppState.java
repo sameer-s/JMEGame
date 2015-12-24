@@ -26,13 +26,20 @@ import com.jme3.bullet.util.CollisionShapeFactory;
 import com.jme3.input.ChaseCamera;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.light.DirectionalLight;
+import com.jme3.material.Material;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.Geometry;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.shape.Box;
 import java.util.HashMap;
+import javax.swing.JOptionPane;
 import mygame.Main;
+import mygame.character.NetworkedCharacterControl;
 import mygame.character.ThirdPersonCharacterControl;
 import mygame.gui.GUIConsole;
+import mygame.network.message.PlayerInformationMessage;
 import org.lwjgl.input.Keyboard;
 
 /**
@@ -41,17 +48,42 @@ import org.lwjgl.input.Keyboard;
  */
 public class PlayAppState extends AbstractAppState
 {
-    private Main app;
+    public Main app;
 
     // These are, for now, both the male model. This will be changed at some point.
     private static final String MALE_MODEL = "Models/MainCharacter3_2/MainCharacter3_2.j3o",
                               FEMALE_MODEL = "Models/MainCharacter3_2/MainCharacter3_2.j3o";
 
+    public static HashMap<String, String> MALE_ANIMS, FEMALE_ANIMS;
+
+    private void setupAnimMaps()
+    {
+        // Maps the names that the Third Person Character Controller class uses
+        // for animations to that the model uses.
+
+        // Male:
+        MALE_ANIMS = new HashMap<>();
+        MALE_ANIMS.put("Idle", "Idle");
+        MALE_ANIMS.put("Move", "Running3");
+
+        // Female: again, for now, the same. Will be changed/
+        FEMALE_ANIMS = new HashMap<>();
+        FEMALE_ANIMS.put("Idle", "Idle");
+        FEMALE_ANIMS.put("Move", "Running3");
+    }
     @Override
     public void initialize(AppStateManager stateManager, Application app)
     {
         super.initialize(stateManager, app);
         this.app = (Main) app;
+
+        Box b = new Box(.3f, .3f, .3f);
+        this.app.box = new Geometry("Box", b);
+        Material mat = new Material(this.app.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
+        mat.setColor("Color", ColorRGBA.Red);
+        this.app.box.setMaterial(mat);
+        this.app.getRootNode().attachChild(this.app.box);
+        this.app.box.setLocalTranslation(-5f, 2f, 5f);
 
         // Sets up the Bullet Physics Engine
         BulletAppState bulletAppState = new BulletAppState();
@@ -78,6 +110,9 @@ public class PlayAppState extends AbstractAppState
         // Registers the model with the Bullet Physics Engine
         bulletAppState.getPhysicsSpace().add(scene);
 
+        // Sets up the HashMaps we use for animation
+        setupAnimMaps();
+
         Spatial playerModel = this.app.getAssetManager()
                 .loadModel(this.app.isPlayer1 ? MALE_MODEL : FEMALE_MODEL);
 
@@ -99,17 +134,27 @@ public class PlayAppState extends AbstractAppState
         // Speeds up the rotation, as the default is quite slow.
         chaseCam.setRotationSpeed(2f);
 
-        // Maps the names that the Third Person Character Controller class uses
-        // for animations to that the model uses.
-        HashMap<String, String> anims = new HashMap<>();
-        anims.put("Idle", "Idle");
-        anims.put("Move", "Running3");
 
         // Creates our new character controller, passing in a few necessary parameters.
         this.app.playerController = new ThirdPersonCharacterControl(
-                this.app.getInputManager(), anims, playerModel, this.app.getCamera());
+                this.app.getInputManager(), this.app.isPlayer1 ? MALE_ANIMS : FEMALE_ANIMS,
+                playerModel, this.app.getCamera());
         // Attaches the control to the player model
         playerModel.addControl(this.app.playerController);
+
+        // Loads the opposite model for your opponent
+        Spatial opponentModel = this.app.getAssetManager()
+                .loadModel(this.app.isPlayer1 ? FEMALE_MODEL : MALE_MODEL);
+
+        // Makes some adjustment so it works properly
+        opponentModel.scale(2.f);
+        opponentModel.rotate(0f, 180f * FastMath.DEG_TO_RAD, 0f);
+        opponentModel.setLocalTranslation(-5f, 200f, 5f);
+
+        this.app.networkedController = new NetworkedCharacterControl(
+                this.app.isPlayer1 ? FEMALE_ANIMS : MALE_ANIMS, opponentModel);
+        opponentModel.addControl(this.app.networkedController);
+
 
         // Attaches the model to the root node
         // This makes it appear in the world
@@ -137,12 +182,17 @@ public class PlayAppState extends AbstractAppState
         // Registers the GUI-based console
         GUIConsole console = new GUIConsole();
         console.initKeys(this.app.getInputManager(), new KeyTrigger(Keyboard.KEY_T), commandRunner);
+
+        this.app.clientMessageListener.setAppState(this);
     }
 
     /**
      * Called in a loop by the engine to allow the game to make changes.
      * @param tpf "Time per frame"; the amount of time taken between the last update cycle and this one
      */
+
+    private Vector3f boxLocation = new Vector3f();
+
     @Override
     public void update(float tpf)
     {
@@ -150,5 +200,25 @@ public class PlayAppState extends AbstractAppState
         app.playerController.update(tpf);
 
         app.client.send(app.playerController.toMessage());
+
+        app.box.setLocalTranslation(boxLocation);
+    }
+
+    public void opponentDisconnected()
+    {
+        app.stop();
+        JOptionPane.showMessageDialog(
+            null,
+            "Looks like your opponent disconnected. Thanks for playing!",
+            "Opponent disconnected",
+            JOptionPane.ERROR_MESSAGE);
+        System.exit(0);
+    }
+
+    public void updateOpponentLocation(PlayerInformationMessage m)
+    {
+        boxLocation = new Vector3f(m.location[0], m.location[1], m.location[2]);
+//        this.app.box.setLocalTranslation(m.location[0], m.location[1], m.location[2]);
+//        this.app.networkedController.updateFromMessage(m);
     }
 }

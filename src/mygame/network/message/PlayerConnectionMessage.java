@@ -24,18 +24,19 @@ import com.jme3.network.serializing.Serializable;
  * @author Sameer Suri
  */
 @Serializable
-public class ConnectionRequestMessage extends AbstractMessage
+public class PlayerConnectionMessage extends AbstractMessage
 {
-    // Assigned by the server.
-    public ConnectionStatus status;
+    // true -> connect; false -> disconnect
+    public boolean isConnection;
 
-    public static enum ConnectionStatus
+    public PlayerConnectionMessage setIsConnection(boolean isConnection)
     {
-        PLAYER1, PLAYER2, REQUEST_DENIED;
+        this.isConnection = isConnection;
+        return this;
     }
 
     /**
      * An empty constructor. Required for the SpiderMonkey serializer.
      */
-    public ConnectionRequestMessage(){};
+    public PlayerConnectionMessage(){};
 }

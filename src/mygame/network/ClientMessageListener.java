@@ -16,12 +16,17 @@
  */
 package mygame.network;
 
+import com.jme3.app.state.AppState;
 import com.jme3.network.Client;
 import com.jme3.network.Message;
 import com.jme3.network.MessageListener;
 import java.util.Arrays;
+import mygame.Main;
 import mygame.game.InitAppState;
+import mygame.game.PlayAppState;
+import mygame.game.WaitingAppState;
 import mygame.network.message.ConnectionRequestMessage;
+import mygame.network.message.PlayerConnectionMessage;
 import mygame.network.message.PlayerInformationMessage;
 
 /**
@@ -30,11 +35,12 @@ import mygame.network.message.PlayerInformationMessage;
  */
 public class ClientMessageListener implements MessageListener<Client>
 {
-    private InitAppState initAppState;
 
-    public ClientMessageListener setInitAppState(InitAppState initAppState)
+    private AppState appState;
+
+    public ClientMessageListener setAppState(AppState appState)
     {
-        this.initAppState = initAppState;
+        this.appState = appState;
         return this;
     }
 
@@ -42,12 +48,28 @@ public class ClientMessageListener implements MessageListener<Client>
     @Override
     public void messageReceived(Client source, Message m)
     {
-        if(m instanceof ConnectionRequestMessage)
+        if(m instanceof ConnectionRequestMessage && appState instanceof InitAppState)
         {
-            initAppState.setStatus(((ConnectionRequestMessage) m).status);
+            ((InitAppState) appState).setStatus(((ConnectionRequestMessage) m).status);
         }
-        else if(m instanceof PlayerInformationMessage)
+        else if(m instanceof PlayerConnectionMessage && appState instanceof WaitingAppState)
         {
+            if(((PlayerConnectionMessage) m).isConnection && ((WaitingAppState) appState).isPlayer1())
+            {
+                ((WaitingAppState) appState).finish();
+            }
+        }
+        else if(m instanceof PlayerConnectionMessage && appState instanceof PlayAppState)
+        {
+            if(!((PlayerConnectionMessage) m).isConnection)
+            {
+                ((PlayAppState) appState).opponentDisconnected();
+            }
+        }
+        else if(m instanceof PlayerInformationMessage && appState instanceof PlayAppState)
+        {
+            ((PlayAppState) appState).updateOpponentLocation((PlayerInformationMessage) m);
+
             PlayerInformationMessage pim = (PlayerInformationMessage)(m);
 
             System.out.println("Other player's status:");
@@ -55,6 +77,15 @@ public class ClientMessageListener implements MessageListener<Client>
             System.out.println("Location: " + Arrays.toString(pim.location));
             System.out.println("Rotation: " + Arrays.toString(pim.rotation));
             System.out.println("Current Anim: " + pim.currentAnims[0]);
+
+
+            // TODO: When done, make app final in PlayAppState
+            Main app = ((PlayAppState) appState).app;
+            System.out.println("\nNetwork controller status:");
+            System.out.println("----------------------");
+            System.out.println("Location: " + app.networkedController.getPhysicsLocation());
+            System.out.println("Rotation: " + app.networkedController.getPhysicsRotation());
+            System.out.println("Current Anim: not being logged");
         }
     }
 }

@@ -48,9 +48,11 @@ public class PlayerInformationMessage extends AbstractMessage
        This is the name (map key) defined in the 3rd person character control.
        This is NOT the name of the animation as defined in the 3D model.
        THIS MUST BE DEFINED IN THE SAME ORDER AS THE ARRAY:
-            ThirdPersonCharacterControl.bodyNodes;
+            AnimatedCharacterControl.bodyNodes;
      */
     public String[] currentAnims;
+
+    // TODO: pass LoopMode, possibly as ordinal ints
 
     /**
      * An empty constructor. Required for the SpiderMonkey serializer.

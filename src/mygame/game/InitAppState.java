@@ -28,6 +28,7 @@ import mygame.network.ClientMessageListener;
 import mygame.network.ServerMain;
 import mygame.network.message.ConnectionRequestMessage;
 import mygame.network.message.ConnectionRequestMessage.ConnectionStatus;
+import mygame.network.message.PlayerConnectionMessage;
 import mygame.network.message.PlayerInformationMessage;
 
 /**
@@ -46,8 +47,9 @@ public class InitAppState extends AbstractAppState
         this.app = (Main) app;
 
         // Registers the custom message classes for networking
-        Serializer.registerClass(PlayerInformationMessage.class);
-        Serializer.registerClass(ConnectionRequestMessage.class);
+        Serializer.registerClasses(PlayerInformationMessage.class,
+                                   ConnectionRequestMessage.class,
+                                   PlayerConnectionMessage.class);
 
         try
         {
@@ -55,7 +57,8 @@ public class InitAppState extends AbstractAppState
             this.app.client = Network.connectToServer("localhost", ServerMain.PORT);
             this.app.client.start();
 
-            this.app.client.addMessageListener(new ClientMessageListener().setInitAppState(this));
+            this.app.clientMessageListener = new ClientMessageListener().setAppState(this);
+            this.app.client.addMessageListener(this.app.clientMessageListener);
 
             this.app.client.send(new ConnectionRequestMessage().setReliable(true));
         }
@@ -65,12 +68,13 @@ public class InitAppState extends AbstractAppState
             System.err.println("STACK TRACE:");
             e.printStackTrace(System.err);
 
+            app.stop();
             JOptionPane.showMessageDialog(
                 null,
                 "Looks like we were unable to connect to the server.",
                 "Error: " + e.getClass().getName(),
                 JOptionPane.ERROR_MESSAGE);
-            app.stop();
+            System.exit(0);
         }
     }
 
