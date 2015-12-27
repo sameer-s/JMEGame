@@ -20,8 +20,6 @@ import com.jme3.app.state.AppState;
 import com.jme3.network.Client;
 import com.jme3.network.Message;
 import com.jme3.network.MessageListener;
-import java.util.Arrays;
-import mygame.Main;
 import mygame.game.InitAppState;
 import mygame.game.PlayAppState;
 import mygame.game.WaitingAppState;
@@ -69,23 +67,6 @@ public class ClientMessageListener implements MessageListener<Client>
         else if(m instanceof PlayerInformationMessage && appState instanceof PlayAppState)
         {
             ((PlayAppState) appState).updateOpponentLocation((PlayerInformationMessage) m);
-
-            PlayerInformationMessage pim = (PlayerInformationMessage)(m);
-
-            System.out.println("Other player's status:");
-            System.out.println("----------------------");
-            System.out.println("Location: " + Arrays.toString(pim.location));
-            System.out.println("Rotation: " + Arrays.toString(pim.rotation));
-            System.out.println("Current Anim: " + pim.currentAnims[0]);
-
-
-            // TODO: When done, make app final in PlayAppState
-            Main app = ((PlayAppState) appState).app;
-            System.out.println("\nNetwork controller status:");
-            System.out.println("----------------------");
-            System.out.println("Location: " + app.networkedController.getPhysicsLocation());
-            System.out.println("Rotation: " + app.networkedController.getPhysicsRotation());
-            System.out.println("Current Anim: not being logged");
         }
     }
 }

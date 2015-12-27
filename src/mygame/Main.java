@@ -44,7 +44,7 @@ import mygame.network.ClientMessageListener;
  */
 public class Main extends SimpleApplication
 {
-    public Spatial box;
+    public Spatial otherPlayer;
 
     /**
      * The player controller for the player controlled by THIS client

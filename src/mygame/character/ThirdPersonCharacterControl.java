@@ -22,6 +22,9 @@ import com.jme3.animation.AnimControl;
 import com.jme3.animation.LoopMode;
 import com.jme3.bullet.control.BetterCharacterControl;
 import com.jme3.input.InputManager;
+import com.jme3.input.Joystick;
+import com.jme3.input.JoystickAxis;
+import com.jme3.input.JoystickButton;
 import com.jme3.input.KeyInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
@@ -52,7 +55,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
     private static final float moveSpeed = 10f, jumpBoost = 2;
 
     // Constants describing the physical characteristics of the character
-    static final float _radius = .5f, _height = 1f, _mass = 1f;
+    public static final float _radius = .5f, _height = 1f, _mass = 1f;
 
     // The instance of the JME camera class that we use to find out which way the player is looking.
     @SuppressWarnings("FieldMayBeFinal")
@@ -72,7 +75,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
     private HashMap<String, String> animations;
 
     // The array that stores the names that Mixamo uses for each body part.
-    private static final String[] bodyNodes = new String[]
+    static final String[] bodyNodes = new String[]
     {
         "Beards",
         "Body",
@@ -87,21 +90,16 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
 
     /**
      * Constructor for the control.
-     * @param man The input manager, so the control can map certain keypresses to movement
      * @param animations The map of animations, so the control knows which ones to use
      * @param spatial The model used, so that the control can find the animations in the model
      * @param cam The camera, so that the control can see where the player is looking
      */
-    public ThirdPersonCharacterControl(InputManager man,
-            HashMap<String, String> animations, Spatial spatial, Camera cam)
+    public ThirdPersonCharacterControl(HashMap<String, String> animations, Spatial spatial, Camera cam)
     {
         // Calls the BetterCharacterControl constructor, which, among other things
         // creates a Bullet Physics entity to the player, given a radius, height,
         // and mass (this would be represented as a capsule shape)
         super(_radius, _height, _mass);
-
-        // Initializes the keypresses. Given its own method for readability.
-        initKeys(man);
 
         // Increases the jump force depending on how much it is boosted in the
         // corresponding constant.
@@ -131,7 +129,13 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         setAnim("Idle");
     }
 
-   private void initKeys(InputManager inputManager)
+    /**
+     * Binds keys to their respective actions.
+     * Also takes care of joystick input.
+     * @param inputManager The input manager that is uesd for binding the actions.
+     * @param joystickId The ID of the joystick. FOR DEBUGGING, TO BE REMOVED IN FINAL RELEASE.
+     */
+    public void initKeys(InputManager inputManager, int joystickId)
     {
         // Binds keys to their respective actions
         // For now, there is movement and jumping
@@ -148,14 +152,27 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         // This one binds jumping to the spacebar
         inputManager.addMapping("Jump", new KeyTrigger(KeyInput.KEY_SPACE));
 
+        // Joystick bindings
+        inputManager.setAxisDeadZone(0.5f);
+        Joystick[] joysticks = inputManager.getJoysticks();
+
+        if(joysticks != null)
+        {
+            for(Joystick joystick : joysticks)
+            {
+                if(joystick.getJoyId() == joystickId)
+                {
+                    joystick.getAxis(JoystickAxis.X_AXIS).assignAxis("Right", "Left");
+                    joystick.getAxis(JoystickAxis.Y_AXIS).assignAxis("Backward", "Forward");
+                    joystick.getButton(JoystickButton.BUTTON_2).assignButton("Jump");
+                }
+            }
+        }
+
         // Adds listeners for the action
         // This allows 'this' object to be notified when one of the above set
         // keys is pressed
-        inputManager.addListener(this, "Forward");
-        inputManager.addListener(this, "Left");
-        inputManager.addListener(this, "Backward");
-        inputManager.addListener(this, "Right");
-        inputManager.addListener(this, "Jump");
+        inputManager.addListener(this, "Forward", "Left", "Backward", "Right", "Jump", "JoyForward", "JoyLeft", "JoyBackward", "JoyRight");
     }
 
    /**
