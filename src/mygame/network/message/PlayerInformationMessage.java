@@ -7,8 +7,7 @@ import com.jme3.network.serializing.Serializable;
  * A message that communicates the information stored about a player over the network.
  * @author Sameer Suri
  */
-// Allows the SpiderMonkey (jMonkeyEngine network library) serializer to
-// serialize this object.
+// Allows the SpiderMonkey (jMonkeyEngine network library) serializer to serialize this object.
 @Serializable()
 public class PlayerInformationMessage extends AbstractMessage
 {
@@ -20,10 +19,10 @@ public class PlayerInformationMessage extends AbstractMessage
     public float[] location;
 
     /**
-     * Positional information about the rotation of the player
+     * Positional information about the rotation of the player.
      * Should have 4 members:
      * index 0 -> w, index 1 -> x, index 2 -> y, index 3 -> z
-     * There are 4 values because these are quaternion values, not eulers.
+     * There are 4 values because these are quaternion values, not euler angles.
      */
     public float[] rotation;
 
@@ -32,11 +31,11 @@ public class PlayerInformationMessage extends AbstractMessage
        This is the name (map key) defined in the 3rd person character control.
        This is NOT the name of the animation as defined in the 3D model.
        THIS MUST BE DEFINED IN THE SAME ORDER AS THE ARRAY:
-            AnimatedCharacterControl.bodyNodes;
+            mygame.character.ThirdPersonCharacterControl.bodyNodes;
      */
     public String[] currentAnims;
 
-    // TODO: pass LoopMode, possibly as ordinal ints
+    // TODO: pass LoopMode, possibly as ordinal ints.
 
     /**
      * An empty constructor. Required for the SpiderMonkey serializer.

@@ -7,6 +7,10 @@ import javax.swing.JOptionPane;
 
 /**
  * A 'console' to allow the user to enter text-based commands.
+ * This is (most likely) going to be for debugging
+ * The final product will either:
+ * A.) Have no console
+ * B.) Have one implemented in Nifty GUI
  * @author Sameer Suri
  */
 public class GUIConsole implements ActionListener
@@ -66,6 +70,7 @@ public class GUIConsole implements ActionListener
         }
     }
 
+    // An interface, that, when implemented, indicates how to run a command passed to the console
     public static interface CommandRunner
     {
         public void runCommand(String cmd);

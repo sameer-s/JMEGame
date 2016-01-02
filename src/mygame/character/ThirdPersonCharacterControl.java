@@ -136,15 +136,24 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         inputManager.addMapping("Jump", new KeyTrigger(KeyInput.KEY_SPACE));
 
         // Joystick bindings
+
+        // If the joystick does not go more than halfway through, don't move.
+        // This is to avoid calibration errors.
         inputManager.setAxisDeadZone(0.5f);
+
+        // Gets a list of the current joysticks.
         Joystick[] joysticks = inputManager.getJoysticks();
 
+        // If there are any joysticks...
         if(joysticks != null)
         {
+            // ... for each joystick ...
             for(Joystick joystick : joysticks)
             {
+                // ... if its ID matches the provided one ...
                 if(joystick.getJoyId() == joystickId)
                 {
+                    // ... bind its axes to movement.
                     joystick.getAxis(JoystickAxis.X_AXIS).assignAxis("Right", "Left");
                     joystick.getAxis(JoystickAxis.Y_AXIS).assignAxis("Backward", "Forward");
                     joystick.getButton(JoystickButton.BUTTON_2).assignButton("Jump");
@@ -155,21 +164,20 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         // Adds listeners for the action
         // This allows 'this' object to be notified when one of the above set
         // keys is pressed
-        inputManager.addListener(this, "Forward", "Left", "Backward", "Right", "Jump", "JoyForward", "JoyLeft", "JoyBackward", "JoyRight");
+        inputManager.addListener(this, "Forward", "Left", "Backward", "Right", "Jump");
     }
 
-   /**
-    * Notifies the character controller when a button event occurs.
-    * @param action The name of the button event
-    * @param isPressed Was it a press (true) or a release (false)?
-    * @param tpf Time since the last frame
-    */
+    // Notifies the character controller when a button event occurs.
+
     @Override
     public void onAction(String action, boolean isPressed, float tpf)
     {
+        // What was the name of the button event?
         switch (action)
         {
             // If it is a movement event, update the corresponding boolean
+            // isPressed = true -> press event
+            // isPressed = false -> release event
             case "Forward":
                 forward = isPressed;
                 break;
@@ -197,10 +205,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
     // Contains the direction that is currently 'forward', for the character
     Vector3f forwardVector = new Vector3f();
 
-    /**
-     * Handles movement as the game goes on.
-     * @param tpf Time since the last update event.
-     */
+    // Handles movement as the game goes on.
     @Override
     public void update(float tpf)
     {
@@ -259,10 +264,8 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         setViewDirection(forwardVector);
     }
 
-    /**
-     * Handles animations on the player
-     * To be called in an update loop (from the update method)
-     */
+    // Handles animations on the player
+    // To be called in an update loop (from the update method)
     private void handleAnimations()
     {
         // If we are moving...
