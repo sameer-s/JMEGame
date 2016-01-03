@@ -17,7 +17,7 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
 import java.util.HashMap;
 import javax.swing.JOptionPane;
-import mygame.character.NetworkedCharacterAnimationHandler;
+import mygame.character.NetworkedCharacterHandlers;
 import mygame.character.ThirdPersonCharacterControl;
 import static mygame.character.ThirdPersonCharacterControl._height;
 import static mygame.character.ThirdPersonCharacterControl._mass;
@@ -107,12 +107,6 @@ public class PlayAppState extends AbstractAppState
         playerModel.rotate(0f, 180f * FastMath.DEG_TO_RAD, 0f);
         playerModel.setLocalTranslation(-5f, 2f, 5f);
 
-        // Attaches the model to the root node
-        // This makes it appear in the world
-        this.app.getRootNode().attachChild(playerModel);
-        // Registers the model with the Bullet Physics Engine
-        bulletAppState.getPhysicsSpace().add(playerModel);
-
         // Creates the chase camera. The chase camera is a camera which rotates
         // and zooms around the player. There are some configuration changes
         // I made, which I detail below:
@@ -137,6 +131,12 @@ public class PlayAppState extends AbstractAppState
         // Attaches the control to the player model
         playerModel.addControl(this.app.playerController);
 
+        // Attaches the model to the root node
+        // This makes it appear in the world
+        this.app.getRootNode().attachChild(playerModel);
+        // Registers the model with the Bullet Physics Engine
+        bulletAppState.getPhysicsSpace().add(playerModel);
+
         // Loads the opposite model for your opponent
         this.app.otherPlayer = this.app.getAssetManager().loadModel(this.app.isPlayer1 ? FEMALE_MODEL : MALE_MODEL);
         // Makes some adjustment so it works properly
@@ -146,11 +146,10 @@ public class PlayAppState extends AbstractAppState
 
         // Attaches it to the root node
         this.app.getRootNode().attachChild(this.app.otherPlayer);
-
-                bulletAppState.getPhysicsSpace().add(this.app.otherPlayer);
+        bulletAppState.getPhysicsSpace().add(this.app.otherPlayer);
 
         // Sets up the animations for the other player
-        NetworkedCharacterAnimationHandler.init(this.app.otherPlayer, this.app.isPlayer1 ? FEMALE_ANIMS : MALE_ANIMS);
+        NetworkedCharacterHandlers.AnimationHandler.init(this.app.otherPlayer, this.app.isPlayer1 ? FEMALE_ANIMS : MALE_ANIMS);
         // Gives it a 'rigid body' so it can exist in the Bullet Physics world
         RigidBodyControl otherPlayerControl = new RigidBodyControl(_mass);
         // Creates a collider based on a capsule.
@@ -207,7 +206,7 @@ public class PlayAppState extends AbstractAppState
         // avoid null pointer
         if(otherCharacterAnims != null)
         {
-            NetworkedCharacterAnimationHandler.updateAnims(otherCharacterAnims);
+            NetworkedCharacterHandlers.AnimationHandler.updateAnims(otherCharacterAnims);
         }
     }
 
@@ -216,7 +215,7 @@ public class PlayAppState extends AbstractAppState
     {
         // Updates the corresponding variables
         otherCharacterLocation = new Vector3f(m.location[0], m.location[1], m.location[2]);
-        otherCharacterRotation = new Quaternion(m.rotation[0], m.rotation[1], m.rotation[2], m.rotation[3]);
+//        otherCharacterRotation = new Quaternion(m.rotation[0], m.rotation[1], m.rotation[2], m.rotation[3]);
         otherCharacterAnims = m.currentAnims;
     }
 
