@@ -159,6 +159,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
                     joystick.getAxis(JoystickAxis.Y_AXIS).assignAxis("Backward", "Forward");
 
                     joystick.getButton(JoystickButton.BUTTON_2).assignButton("Jump");
+                    joystick.getButton(JoystickButton.BUTTON_0).assignButton("Disco");
 
                     joystick.getAxis(JoystickAxis.Z_AXIS).assignAxis(CameraInput.CHASECAM_MOVERIGHT, CameraInput.CHASECAM_MOVELEFT);
                     joystick.getAxis(JoystickAxis.Z_ROTATION).assignAxis(CameraInput.CHASECAM_DOWN, CameraInput.CHASECAM_UP);

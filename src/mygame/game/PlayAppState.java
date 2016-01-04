@@ -9,11 +9,16 @@ import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
 import com.jme3.input.ChaseCamera;
+import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.light.DirectionalLight;
+import com.jme3.material.RenderState;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.Geometry;
+import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import java.util.HashMap;
 import javax.swing.JOptionPane;
@@ -31,7 +36,7 @@ import org.lwjgl.input.Keyboard;
  * This is the main game, and all of the actual game code is here.
  * @author Sameer Suri
  */
-public class PlayAppState extends AbstractAppState
+public class PlayAppState extends AbstractAppState implements ActionListener
 {
     // Holds a reference to the application
     private Main app;
@@ -77,9 +82,13 @@ public class PlayAppState extends AbstractAppState
 
         // Loads the model used for the scene
         Spatial sceneModel = this.app.getAssetManager()
-                .loadModel("Scenes/ManyLights/Main.scene");
+                .loadModel("Scenes/FirstScene.j3o");
+//              .loadModel("Scenes/ManyLights/Main.scene");
+
+        disableFaceCulling(sceneModel);
+
         // Scales it to make it a little short
-        sceneModel.scale(1f, .5f, 1f);
+        sceneModel.scale(1f, .1f, 1f);
         // Generates a collider for physics collisions
         CollisionShape sceneShape = CollisionShapeFactory.createMeshShape(sceneModel);
         // Creates a control. What a control does is tell what it's controlling
@@ -105,7 +114,7 @@ public class PlayAppState extends AbstractAppState
         // Makes some adjustment so it works properly
         playerModel.scale(2.f);
         playerModel.rotate(0f, 180f * FastMath.DEG_TO_RAD, 0f);
-        playerModel.setLocalTranslation(-5f, 2f, 5f);
+        playerModel.setLocalTranslation(20f, 50f, 20f);
 
         // Creates the chase camera. The chase camera is a camera which rotates
         // and zooms around the player. There are some configuration changes
@@ -183,6 +192,9 @@ public class PlayAppState extends AbstractAppState
 
         // Informs the client message listener of the current app states
         this.app.clientMessageListener.setAppState(this);
+
+        this.app.getInputManager().addMapping("Disco", new KeyTrigger(Keyboard.KEY_8));
+        this.app.getInputManager().addListener(this, "Disco");
     }
 
     // Variables to describe the current state of the other player
@@ -190,6 +202,8 @@ public class PlayAppState extends AbstractAppState
     private Quaternion otherCharacterRotation = new Quaternion();
     private String[] otherCharacterAnims = null;
 
+    private boolean disco = false;
+    private float t = 0;
     // Called in a loop by the engine to allow the game to make changes.
     @Override
     public void update(float tpf)
@@ -208,6 +222,16 @@ public class PlayAppState extends AbstractAppState
         {
             NetworkedCharacterHandlers.AnimationHandler.updateAnims(otherCharacterAnims);
         }
+
+
+        if(t == 0)
+        {
+            // Makes the sky blue
+            this.app.getViewPort().setBackgroundColor(disco ? ColorRGBA.randomColor() : new ColorRGBA(0f, 127f/255f, 1f, 1f));
+        }
+
+        t += tpf;
+        if(t >= .5) t = 0;
     }
 
     // Called by our message listener when the other player sends out its info
@@ -232,5 +256,30 @@ public class PlayAppState extends AbstractAppState
             JOptionPane.ERROR_MESSAGE);
         // Exits the JVM
         System.exit(0);
+    }
+
+    @Override
+    public void onAction(String name, boolean isPressed, float tpf)
+    {
+        if(name.equals("Disco") && isPressed)
+        {
+            disco = !disco;
+            t = 0;
+        }
+    }
+
+    private void disableFaceCulling(Spatial spatial)
+    {
+        if(spatial instanceof Geometry)
+        {
+            ((Geometry) spatial).getMaterial().getAdditionalRenderState().setFaceCullMode(RenderState.FaceCullMode.Off);
+        }
+        else if(spatial instanceof Node)
+        {
+            for(Spatial s : ((Node) spatial).getChildren())
+            {
+                disableFaceCulling(s);
+            }
+        }
     }
 }
