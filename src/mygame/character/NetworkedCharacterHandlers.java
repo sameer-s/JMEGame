@@ -6,6 +6,7 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import java.util.HashMap;
+import static mygame.character.ThirdPersonCharacterControl.moveSpeed;
 
 /**
  * Handlers for the other player's character.
@@ -23,16 +24,17 @@ public class NetworkedCharacterHandlers
      */
     public static class MovementHandler
     {
-        private static final float SPEED = Float.MAX_VALUE;
-
         public static Vector3f move(Vector3f location, Vector3f target, float tpf)
         {
             final float distance = location.distance(target);
-            final Vector3f movement = location.subtract(target);
+            if(distance == 0)
+                return location;
 
-            Vector3f adjusted = movement.mult((tpf * SPEED) / distance);
+            final Vector3f movement = target.subtract(location);
 
-            return adjusted.length() > movement.length() ? movement : adjusted;
+            Vector3f adjusted = movement.mult((tpf * moveSpeed) / distance);
+
+            return adjusted.length() > movement.length() ? movement.add(location) : adjusted.add(location);
         }
     }
     /**

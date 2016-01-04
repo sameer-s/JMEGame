@@ -201,7 +201,7 @@ public class PlayAppState extends AbstractAppState
         app.client.send(app.playerController.toMessage());
 
         // Adjusts the other player's state based on what we have recieved
-        app.otherPlayer.setLocalTranslation(otherCharacterLocation);
+        app.otherPlayer.setLocalTranslation(NetworkedCharacterHandlers.MovementHandler.move(app.otherPlayer.getLocalTranslation(), otherCharacterLocation, tpf));
         app.otherPlayer.setLocalRotation(otherCharacterRotation);
         // avoid null pointer
         if(otherCharacterAnims != null)

@@ -36,7 +36,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
     private boolean forward, backward, left, right;
 
     // Constants describing the movement of the character
-    private static final float moveSpeed = 10f, jumpBoost = 2;
+    static final float moveSpeed = 10f, jumpBoost = 2;
 
     // Constants describing the physical characteristics of the character
     public static final float _radius = .5f, _height = 1f, _mass = 1f;
