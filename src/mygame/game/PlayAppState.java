@@ -215,7 +215,7 @@ public class PlayAppState extends AbstractAppState
     {
         // Updates the corresponding variables
         otherCharacterLocation = new Vector3f(m.location[0], m.location[1], m.location[2]);
-//        otherCharacterRotation = new Quaternion(m.rotation[0], m.rotation[1], m.rotation[2], m.rotation[3]);
+        otherCharacterRotation = new Quaternion(m.rotation[0], m.rotation[1], m.rotation[2], m.rotation[3]);
         otherCharacterAnims = m.currentAnims;
     }
 

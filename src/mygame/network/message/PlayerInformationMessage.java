@@ -21,7 +21,7 @@ public class PlayerInformationMessage extends AbstractMessage
     /**
      * Positional information about the rotation of the player.
      * Should have 4 members:
-     * index 0 -> w, index 1 -> x, index 2 -> y, index 3 -> z
+     * index 0 -> x, index 1 -> y, index 2 -> z, index 3 -> w
      * There are 4 values because these are quaternion values, not euler angles.
      */
     public float[] rotation;

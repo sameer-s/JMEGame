@@ -38,6 +38,7 @@ public class ServerMain extends SimpleApplication implements ConnectionListener,
     {
         // Starts the server in headless mode (no window, etc.)
         ServerMain app = new ServerMain();
+        app.settings.setFrameRate(60);
         app.start(JmeContext.Type.Headless);
     }
 

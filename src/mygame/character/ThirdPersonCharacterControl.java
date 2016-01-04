@@ -405,7 +405,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         message.location = new float[]
             {location.x, location.y, location.z};
         message.rotation = new float[]
-            {rotation.getW(), rotation.getX(), rotation.getY(), rotation.getZ()};
+            {rotation.getX(), rotation.getY(), rotation.getZ(), rotation.getW()};
 
         // Tells the message to use UDP rather than TCP protocol
         // TCP -> slow, reliable (no packet loss)
