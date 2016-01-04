@@ -4,6 +4,7 @@ import com.jme3.animation.AnimChannel;
 import com.jme3.animation.AnimControl;
 import com.jme3.animation.LoopMode;
 import com.jme3.bullet.control.BetterCharacterControl;
+import com.jme3.input.CameraInput;
 import com.jme3.input.InputManager;
 import com.jme3.input.Joystick;
 import com.jme3.input.JoystickAxis;
@@ -156,7 +157,11 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
                     // ... bind its axes to movement.
                     joystick.getAxis(JoystickAxis.X_AXIS).assignAxis("Right", "Left");
                     joystick.getAxis(JoystickAxis.Y_AXIS).assignAxis("Backward", "Forward");
+
                     joystick.getButton(JoystickButton.BUTTON_2).assignButton("Jump");
+
+                    joystick.getAxis(JoystickAxis.Z_AXIS).assignAxis(CameraInput.CHASECAM_MOVERIGHT, CameraInput.CHASECAM_MOVELEFT);
+                    joystick.getAxis(JoystickAxis.Z_ROTATION).assignAxis(CameraInput.CHASECAM_DOWN, CameraInput.CHASECAM_UP);
                 }
             }
         }
@@ -164,11 +169,10 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         // Adds listeners for the action
         // This allows 'this' object to be notified when one of the above set
         // keys is pressed
-        inputManager.addListener(this, "Forward", "Left", "Backward", "Right", "Jump");
+        inputManager.addListener(this, "Forward", "Left", "Backward", "Right", "Jump", "RRight", "RLeft");
     }
 
     // Notifies the character controller when a button event occurs.
-
     @Override
     public void onAction(String action, boolean isPressed, float tpf)
     {
@@ -224,8 +228,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
             walkDirection.addLocal(modelForwardDir.mult(moveSpeed));
 
             // Then set the current forward direction as that.
-            forwardVector.set(0, 0, 0);
-            forwardVector.addLocal(walkDirection);
+            forwardVector.set(walkDirection);
          }
         else if (backward)
         {
@@ -233,8 +236,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
             walkDirection.addLocal(modelForwardDir.negate().multLocal(moveSpeed));
 
             // Then set the current forward direction as that.
-            forwardVector.set(0, 0, 0);
-            forwardVector.addLocal(walkDirection);
+            forwardVector.set(walkDirection);
         }
         if (left)
         {
@@ -242,8 +244,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
             walkDirection.addLocal(modelLeftDir.mult(moveSpeed));
 
             // Then set the current forward direction as that.
-            forwardVector.set(0, 0, 0);
-            forwardVector.addLocal(walkDirection);
+            forwardVector.set(walkDirection);
         }
         else if (right)
         {
@@ -251,8 +252,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
             walkDirection.addLocal(modelLeftDir.negate().multLocal(moveSpeed));
 
             // Then set the current forward direction as that.
-            forwardVector.set(0, 0, 0);
-            forwardVector.addLocal(walkDirection);
+            forwardVector.set(walkDirection);
         }
 
         // Handle the movement animations
