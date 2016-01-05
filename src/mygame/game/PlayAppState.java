@@ -80,6 +80,8 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         BulletAppState bulletAppState = new BulletAppState();
         stateManager.attach(bulletAppState);
 
+//        bulletAppState.setDebugEnabled(true);
+
         // Loads the model used for the scene
         Spatial sceneModel = this.app.getAssetManager()
                 .loadModel("Scenes/FirstScene.j3o");
@@ -112,9 +114,8 @@ public class PlayAppState extends AbstractAppState implements ActionListener
                 .loadModel(this.app.isPlayer1 ? MALE_MODEL : FEMALE_MODEL);
 
         // Makes some adjustment so it works properly
-        playerModel.scale(2.f);
-        playerModel.rotate(0f, 180f * FastMath.DEG_TO_RAD, 0f);
-        playerModel.setLocalTranslation(20f, 50f, 20f);
+        playerModel.scale(2f);
+        playerModel.setLocalTranslation(20f, 20f, 20f);
 
         // Creates the chase camera. The chase camera is a camera which rotates
         // and zooms around the player. There are some configuration changes
@@ -135,7 +136,7 @@ public class PlayAppState extends AbstractAppState implements ActionListener
                 playerModel, this.app.getCamera());
 
         // Initializes button presses and joysticks
-        this.app.playerController.initKeys(this.app.getInputManager(), this.app.isPlayer1 ? 0 : 1);
+        this.app.playerController.initKeys(this.app.getInputManager(), this.app.isPlayer1 ? 1 : 0);
 
         // Attaches the control to the player model
         playerModel.addControl(this.app.playerController);
@@ -192,9 +193,6 @@ public class PlayAppState extends AbstractAppState implements ActionListener
 
         // Informs the client message listener of the current app states
         this.app.clientMessageListener.setAppState(this);
-
-        this.app.getInputManager().addMapping("Disco", new KeyTrigger(Keyboard.KEY_8));
-        this.app.getInputManager().addListener(this, "Disco");
     }
 
     // Variables to describe the current state of the other player
@@ -276,10 +274,7 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         }
         else if(spatial instanceof Node)
         {
-            for(Spatial s : ((Node) spatial).getChildren())
-            {
-                disableFaceCulling(s);
-            }
+            ((Node) spatial).getChildren().stream().forEach(s -> {disableFaceCulling(s); });
         }
     }
 }

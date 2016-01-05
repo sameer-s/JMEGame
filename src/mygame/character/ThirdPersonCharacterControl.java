@@ -3,6 +3,9 @@ package mygame.character;
 import com.jme3.animation.AnimChannel;
 import com.jme3.animation.AnimControl;
 import com.jme3.animation.LoopMode;
+import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
+import com.jme3.bullet.collision.shapes.CollisionShape;
+import com.jme3.bullet.collision.shapes.CompoundCollisionShape;
 import com.jme3.bullet.control.BetterCharacterControl;
 import com.jme3.input.CameraInput;
 import com.jme3.input.InputManager;
@@ -14,6 +17,7 @@ import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
+import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import java.util.HashMap;
@@ -36,10 +40,10 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
     private boolean forward, backward, left, right;
 
     // Constants describing the movement of the character
-    static final float moveSpeed = 10f, jumpBoost = 2;
+    static final float moveSpeed = 10f, jumpBoost = 1f;
 
     // Constants describing the physical characteristics of the character
-    public static final float _radius = .5f, _height = 1f, _mass = 1f;
+    public static final float _radius = .6f, _height = 3.4f, heightOffset = .1f, _mass = 1f;
 
     // The instance of the JME camera class that we use to find out which way the player is looking.
     @SuppressWarnings("FieldMayBeFinal")
@@ -72,6 +76,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         "Tops"
     };
 
+
     /**
      * Constructor for the control.
      * @param animations The map of animations, so the control knows which ones to use
@@ -84,6 +89,8 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         // creates a Bullet Physics entity to the player, given a radius, height,
         // and mass (this would be represented as a capsule shape)
         super(_radius, _height, _mass);
+
+        System.out.printf("Spatial is: Node ? %b | Geometry ? %b\n", spatial instanceof Node, spatial instanceof Geometry);
 
         // Increases the jump force depending on how much it is boosted in the
         // corresponding constant.
@@ -170,7 +177,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         // Adds listeners for the action
         // This allows 'this' object to be notified when one of the above set
         // keys is pressed
-        inputManager.addListener(this, "Forward", "Left", "Backward", "Right", "Jump", "RRight", "RLeft");
+        inputManager.addListener(this, "Forward", "Left", "Backward", "Right", "Jump");
     }
 
     // Notifies the character controller when a button event occurs.
@@ -203,7 +210,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
             case "Duck":
                 setDucked(isPressed);
                 break;
-            /* Note: jump and duck are methods created in the superclass */
+           /* Note: jump and duck are methods created in the superclass */
         }
     }
 
@@ -414,5 +421,16 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         message.setReliable(false);
         // Returns the message
         return message;
+    }
+
+    @Override
+    protected CollisionShape getShape()
+    {
+        // Does the exact same as the superclass implementation but adds a height offset
+        CapsuleCollisionShape capsuleCollisionShape = new CapsuleCollisionShape(getFinalRadius(), (getFinalHeight() - (2 * getFinalRadius())));
+        CompoundCollisionShape compoundCollisionShape = new CompoundCollisionShape();
+        Vector3f addLocation = new Vector3f(0, (getFinalHeight() / 2.0f) + heightOffset, 0);
+        compoundCollisionShape.addChildShape(capsuleCollisionShape, addLocation);
+        return compoundCollisionShape;
     }
 }

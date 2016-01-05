@@ -42,6 +42,8 @@ public class WaitAppState extends AbstractAppState
         this.app.getGuiNode().attachChild(text);
 
         this.app.clientMessageListener.setAppState(this); // Sets the current app state to be this one
+
+        finish();
     }
 
     /**
