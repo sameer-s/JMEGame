@@ -39,10 +39,18 @@ public class InitAppState extends AbstractAppState
                                    ConnectionRequestMessage.class,
                                    PlayerConnectionMessage.class);
 
+        String address = (String) JOptionPane.showInputDialog(null, "Enter the address of the server.\nBlank assumes 'localhost'.",
+                "Server address?",
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                null,
+                null);
+        address = address == null ? "localhost" : address;
+
         try
         {
             // Initializes the networking client
-            this.app.client = Network.connectToServer("localhost", ServerMain.PORT);
+            this.app.client = Network.connectToServer(address, ServerMain.PORT);
             this.app.client.start();
 
             // Adds our listener so that we can recieve messages from the server
