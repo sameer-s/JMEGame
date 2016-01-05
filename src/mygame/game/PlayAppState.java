@@ -92,7 +92,7 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         disableFaceCulling(sceneModel);
 
         // Scales it to make it a little short
-        sceneModel.scale(1f, 0f, 1f);
+        sceneModel.scale(1f, 0.1f, 1f);
         // Generates a collider for physics collisions
         CollisionShape sceneShape = CollisionShapeFactory.createMeshShape(sceneModel);
         // Creates a control. What a control does is tell what it's controlling
