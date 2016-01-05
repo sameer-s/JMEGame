@@ -193,6 +193,8 @@ public class PlayAppState extends AbstractAppState implements ActionListener
 
         // Informs the client message listener of the current app states
         this.app.clientMessageListener.setAppState(this);
+
+        this.app.getInputManager().addListener(this, "Disco", "Debug");
     }
 
     // Variables to describe the current state of the other player
@@ -259,10 +261,16 @@ public class PlayAppState extends AbstractAppState implements ActionListener
     @Override
     public void onAction(String name, boolean isPressed, float tpf)
     {
+        System.out.printf("Action, name=%s, isPressed=%b", name, isPressed);
+
         if(name.equals("Disco") && isPressed)
         {
             disco = !disco;
             t = 0;
+        }
+        else if(name.equals("Debug") && isPressed)
+        {
+            app.getStateManager().getState(BulletAppState.class).setDebugEnabled(!app.getStateManager().getState(BulletAppState.class).isDebugEnabled());
         }
     }
 

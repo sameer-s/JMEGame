@@ -167,6 +167,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
 
                     joystick.getButton(JoystickButton.BUTTON_2).assignButton("Jump");
                     joystick.getButton(JoystickButton.BUTTON_0).assignButton("Disco");
+                    joystick.getButton(JoystickButton.BUTTON_1).assignButton("Debug");
 
                     joystick.getAxis(JoystickAxis.Z_AXIS).assignAxis(CameraInput.CHASECAM_MOVERIGHT, CameraInput.CHASECAM_MOVELEFT);
                     joystick.getAxis(JoystickAxis.Z_ROTATION).assignAxis(CameraInput.CHASECAM_DOWN, CameraInput.CHASECAM_UP);
@@ -265,6 +266,9 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
 
         // Handle the movement animations
         handleAnimations();
+
+        walkDirection.normalizeLocal();
+        walkDirection.multLocal(moveSpeed);
 
         // Set the current direction that we are looking at as the "forward" direction
         viewDirection.set(forwardVector);
