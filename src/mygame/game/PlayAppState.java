@@ -92,7 +92,7 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         disableFaceCulling(sceneModel);
 
         // Scales it to make it a little short
-        sceneModel.scale(1f, .1f, 1f);
+        sceneModel.scale(1f, 0f, 1f);
         // Generates a collider for physics collisions
         CollisionShape sceneShape = CollisionShapeFactory.createMeshShape(sceneModel);
         // Creates a control. What a control does is tell what it's controlling
@@ -154,7 +154,7 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         // Makes some adjustment so it works properly
         this.app.otherPlayer.scale(2.f);
         this.app.otherPlayer.rotate(0f, 180f * FastMath.DEG_TO_RAD, 0f);
-        this.app.otherPlayer.setLocalTranslation(-5f, 2f, 5f);
+        this.app.otherPlayer.setLocalTranslation(0, -200f, 0f);
 
         // Attaches it to the root node
         this.app.getRootNode().attachChild(this.app.otherPlayer);
@@ -233,7 +233,7 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         }
 
         t += tpf;
-        if(t >= .5) t = 0;
+        if(t >= .25) t = 0;
     }
 
     // Called by our message listener when the other player sends out its info
