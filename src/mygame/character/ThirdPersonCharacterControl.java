@@ -269,6 +269,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
 
         walkDirection.normalizeLocal();
         walkDirection.multLocal(moveSpeed);
+        walkDirection.setY(0f);
 
         // Set the current direction that we are looking at as the "forward" direction
         viewDirection.set(forwardVector);
