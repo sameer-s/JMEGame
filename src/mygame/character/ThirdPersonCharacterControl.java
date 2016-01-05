@@ -143,6 +143,12 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         // This one binds jumping to the spacebar
         inputManager.addMapping("Jump", new KeyTrigger(KeyInput.KEY_SPACE));
 
+        inputManager.addMapping("Disco", new KeyTrigger(KeyInput.KEY_Y));
+
+        inputManager.addMapping("Disco", new KeyTrigger(KeyInput.KEY_Y));
+        inputManager.addMapping("Debug", new KeyTrigger(KeyInput.KEY_B));
+        inputManager.addMapping("CaptureMouse", new KeyTrigger(KeyInput.KEY_X));
+
         // Joystick bindings
 
         // If the joystick does not go more than halfway through, don't move.
@@ -168,6 +174,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
                     joystick.getButton(JoystickButton.BUTTON_2).assignButton("Jump");
                     joystick.getButton(JoystickButton.BUTTON_0).assignButton("Disco");
                     joystick.getButton(JoystickButton.BUTTON_1).assignButton("Debug");
+                    joystick.getButton(JoystickButton.BUTTON_3).assignButton("CaptureMouse");
 
                     joystick.getAxis(JoystickAxis.Z_AXIS).assignAxis(CameraInput.CHASECAM_MOVERIGHT, CameraInput.CHASECAM_MOVELEFT);
                     joystick.getAxis(JoystickAxis.Z_ROTATION).assignAxis(CameraInput.CHASECAM_DOWN, CameraInput.CHASECAM_UP);

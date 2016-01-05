@@ -50,6 +50,8 @@ public class PlayAppState extends AbstractAppState implements ActionListener
     // Values set in setupAnimMaps()
     public static HashMap<String, String> MALE_ANIMS, FEMALE_ANIMS;
 
+    private ChaseCamera chaseCam;
+
     /**
      * Sets up the maps with the names of the animations
      */
@@ -120,7 +122,7 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         // Creates the chase camera. The chase camera is a camera which rotates
         // and zooms around the player. There are some configuration changes
         // I made, which I detail below:
-        ChaseCamera chaseCam = new ChaseCamera(this.app.getCamera(), playerModel, this.app.getInputManager());
+        chaseCam = new ChaseCamera(this.app.getCamera(), playerModel, this.app.getInputManager());
         // By default, you have to push down a mouse button to rotate the chase cam. This disables that.
         chaseCam.setDragToRotate(false);
         // By default, it looks at the player model's (0,0,0), which is at its feet. This looks a bit higher.
@@ -194,7 +196,7 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         // Informs the client message listener of the current app states
         this.app.clientMessageListener.setAppState(this);
 
-        this.app.getInputManager().addListener(this, "Disco", "Debug");
+        this.app.getInputManager().addListener(this, "Disco", "Debug", "CaptureMouse");
     }
 
     // Variables to describe the current state of the other player
@@ -271,6 +273,10 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         else if(name.equals("Debug") && isPressed)
         {
             app.getStateManager().getState(BulletAppState.class).setDebugEnabled(!app.getStateManager().getState(BulletAppState.class).isDebugEnabled());
+        }
+        else if(name.equals("CaptureMouse") && isPressed)
+        {
+            chaseCam.setDragToRotate(!chaseCam.isDragToRotate());
         }
     }
 
