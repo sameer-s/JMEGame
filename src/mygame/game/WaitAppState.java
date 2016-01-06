@@ -7,7 +7,9 @@ import com.jme3.font.BitmapText;
 import com.jme3.math.ColorRGBA;
 
 /**
- *
+ * The state of the app when one player is connected and the other is not.
+ * Has some text show up on the screen informing the player of what's happening.
+ * Basically disabled right now, because it immediately goes to the next stage.
  * @author Sameer Suri
  */
 public class WaitAppState extends AbstractAppState
@@ -41,8 +43,10 @@ public class WaitAppState extends AbstractAppState
         // Adds it to the world in an orthographic view (GUI node)
         this.app.getGuiNode().attachChild(text);
 
-        this.app.clientMessageListener.setAppState(this); // Sets the current app state to be this one
-
+        // Sets the current app state to be this one
+        this.app.clientMessageListener.setAppState(this);
+        
+        // A statement just for testing, that skips this stage (essentially) and goes to the next
         finish();
     }
 

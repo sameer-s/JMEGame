@@ -21,41 +21,27 @@ import mygame.network.ClientMessageListener;
  */
 public class Main extends SimpleApplication
 {
-    // Game stuff:
+    /* Game stuff: */
 
-    /**
-     * The player controller for the player controlled by THIS client
-     */
+    // The player controller for the player controlled by THIS client.
     ThirdPersonCharacterControl playerController;
 
-    /**
-     * The spatial for the player controlled by the OTHER client. Note that
-     * it is a Spatial and not a control as all of the movements are happenning
-     * externally, and we are just applying them, so a control is not needed.
-     */
+    // The spatial for the player controlled by the OTHER client. 
+    // This is not a controller, but that will probably be implemented later.
     Spatial otherPlayer;
 
-    /**
-     * The networking client.
-     */
+    // The networking client.
     Client client;
 
-    /**
-     * A listener for messages sent by the server. 
-     */
+    // A listener for messages sent by the server. 
     ClientMessageListener clientMessageListener;
 
-    /**
-     * A flag. true if this player is player 1, false otherwise.
-     */
+    // A flag. true if this player is player 1, false otherwise. 
     boolean isPlayer1;
 
-    /**
-     * Tracks the current state of  the app.
-     * Three states currently exist, Init, Wait and Play.
-     */
+    // Tracks the current state of the app.
+    // Three states currently exist, Init, Wait and Play.
     private AppState currentAppState;
-
 
     // Starting point of the client app
     public static void main(String... args)
@@ -153,14 +139,14 @@ public class Main extends SimpleApplication
     }
 
     /**
-     * Gets the default font for use with Nifty GUI
+     * Gets the default font for use with the GUI
      * @return The default GUI font
      */
     public BitmapFont getGuiFont()
     {
         return guiFont;
     }
-
+    
     /**
      * Gets the settings established by the player in the settings menu.
      * @return The settings.

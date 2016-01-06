@@ -82,13 +82,13 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         BulletAppState bulletAppState = new BulletAppState();
         stateManager.attach(bulletAppState);
 
-//        bulletAppState.setDebugEnabled(true);
-
         // Loads the model used for the scene
         Spatial sceneModel = this.app.getAssetManager()
                 .loadModel("Scenes/FirstScene.j3o");
 //              .loadModel("Scenes/ManyLights/Main.scene");
 
+        // Disables face culling, which means that both sides of the scene will be rendered, not just the top.
+        // This makes the game appear less buggy when the camera goes below the world.
         disableFaceCulling(sceneModel);
 
         // Scales it to make it a little short
@@ -110,6 +110,7 @@ public class PlayAppState extends AbstractAppState implements ActionListener
 
         // Sets up the HashMaps we use for animation
         setupAnimMaps();
+        
 
         // Loads the player model (player 1 -> male, player 2 -> female)
         Spatial playerModel = this.app.getAssetManager()
@@ -173,7 +174,9 @@ public class PlayAppState extends AbstractAppState implements ActionListener
 
         // Creates a sun (a light) so that the player can see.
         DirectionalLight sun = new DirectionalLight();
+        // Gives it an angle to add more realism
         sun.setDirection(new Vector3f(-.1f, -.7f, -1f));
+        // Places it in the world
         this.app.getRootNode().addLight(sun);
 
         GUIConsole.CommandRunner commandRunner = (cmd) -> {
@@ -183,19 +186,23 @@ public class PlayAppState extends AbstractAppState implements ActionListener
             // Gets the first word in the command.
             switch(cmd.split(" ")[0])
             {
+                // Currently does nothing
                 default:
                     break;
             }
         };
 
         // Registers the GUI-based console
-        // It is likely temporary
+        // It will likely be temporary and only for debugging
         GUIConsole console = new GUIConsole();
         console.initKeys(this.app.getInputManager(), new KeyTrigger(Keyboard.KEY_T), commandRunner);
 
         // Informs the client message listener of the current app states
         this.app.clientMessageListener.setAppState(this);
 
+        // Has this listen to certain keypresses during the game.
+        // These are initialized in initKeys of ThirdPersonCharacterControl
+        // The rest of them are also handled there
         this.app.getInputManager().addListener(this, "Disco", "Debug", "CaptureMouse");
     }
 
@@ -204,7 +211,9 @@ public class PlayAppState extends AbstractAppState implements ActionListener
     private Quaternion otherCharacterRotation = new Quaternion();
     private String[] otherCharacterAnims = null;
 
+    // A flag. True if we are currently in disco mode, false otherwise.
     private boolean disco = false;
+    // The time, for disco mode. Restarts (at zero) after every disco iteration.
     private float t = 0;
     // Called in a loop by the engine to allow the game to make changes.
     @Override
@@ -222,17 +231,22 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         // avoid null pointer
         if(otherCharacterAnims != null)
         {
+            // Update the animations on the opposing player based on what the messge listener recieved
             NetworkedCharacterHandlers.AnimationHandler.updateAnims(otherCharacterAnims);
         }
 
 
+        // If time = 0 (we are ready to update the sky color)
         if(t == 0)
         {
-            // Makes the sky blue
+            // Makes the sky blue if we are not in disco mode
+            // Set it to a random color if we are
             this.app.getViewPort().setBackgroundColor(disco ? ColorRGBA.randomColor() : new ColorRGBA(0f, 127f/255f, 1f, 1f));
         }
 
+        // Add the time taken this frame to the total time
         t += tpf;
+        // Reset the timer every quarter second (this can be toggled for faster or slower disco)
         if(t >= .25) t = 0;
     }
 
@@ -260,35 +274,61 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         System.exit(0);
     }
 
+    // Called when a button press or other registered action occurs
     @Override
     public void onAction(String name, boolean isPressed, float tpf)
     {
+        // Log that an action occured. Debug statement.
         System.out.printf("Action, name=%s, isPressed=%b", name, isPressed);
-
+        
+        // If it is a disco action, and we are pressing the button (not releasing)
         if(name.equals("Disco") && isPressed)
         {
+            // toggle disco mode
             disco = !disco;
+            // reset the timer
             t = 0;
         }
+        // If it is a debug action, and we are pressing the button
         else if(name.equals("Debug") && isPressed)
         {
+            // Enable debug mode for the physics engine (show colliders)
             app.getStateManager().getState(BulletAppState.class).setDebugEnabled(!app.getStateManager().getState(BulletAppState.class).isDebugEnabled());
         }
+        // The chase camera is the thing that captures the mouse.
+        // By making it so that you have to press the mouse to rotate the camera, this uncaptures the mouse.
+        // Hence, we toggle this setting.
+        // Since it is confusing and useless to the user, this will be removed in release.
         else if(name.equals("CaptureMouse") && isPressed)
         {
+            // Toggle whether you have to click to rotat
             chaseCam.setDragToRotate(!chaseCam.isDragToRotate());
         }
     }
 
+    /**
+     * Disables face culling for a provided spatial.
+     * Should be used sparingly, as rendering both faces of a spatial takes more processing power.
+     * @param spatial The spatial to disable face culling for.
+     */
     private void disableFaceCulling(Spatial spatial)
     {
+        // There are two types of spatials, geometries and nodes.
+        // Geometries are actual objects, and nodes hold more spatials.
+        // Since you can only disable culling for a geometry, for a node, you must [un]cull each child.
+
+        // If it is a geometry
         if(spatial instanceof Geometry)
         {
+            // Set its face culling mode to "Off" (cull no faces)
             ((Geometry) spatial).getMaterial().getAdditionalRenderState().setFaceCullMode(RenderState.FaceCullMode.Off);
         }
+        // Otherwise [it is a node]
         else if(spatial instanceof Node)
         {
-            ((Node) spatial).getChildren().stream().forEach(s -> {disableFaceCulling(s); });
+            // Cull all of this children, by calling this method.
+            // The recursion will allow it to go down the tree and cull all child geometries
+            ((Node) spatial).getChildren().stream().forEach(child -> disableFaceCulling(child));
         }
     }
 }

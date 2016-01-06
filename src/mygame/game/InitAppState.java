@@ -39,6 +39,7 @@ public class InitAppState extends AbstractAppState
                                    ConnectionRequestMessage.class,
                                    PlayerConnectionMessage.class);
 
+        // Asks the player for the address of the server with a simple dialog
         String address = (String) JOptionPane.showInputDialog(null,
                 "Enter the address of the server.\nBlank assumes 'localhost'.",
                 "Server address?",
@@ -46,6 +47,7 @@ public class InitAppState extends AbstractAppState
                 null,
                 null,
                 null);
+        // If the address provided is null (no answer given), assume 'localhost'
         address = address == null ? "localhost" : address;
 
         try
@@ -63,17 +65,22 @@ public class InitAppState extends AbstractAppState
         }
         catch(IOException e)
         {
-            // Reports any error that may occur
+            // Reports any error that may occur to the log
             System.err.println("UNABLE TO CONNECT TO SERVER ON PORT: " + ServerMain.PORT);
             System.err.println("STACK TRACE:");
             e.printStackTrace(System.err);
 
+            // Stops the app
             app.stop();
+            
+            // Informs the player that something happened.
             JOptionPane.showMessageDialog(
                 null,
                 "Unable to connect to the server.\nReason: " + e.getLocalizedMessage(),
                 "Error: " + e.getClass().getName(),
                 JOptionPane.ERROR_MESSAGE);
+        
+            // Kills the JVM
             System.exit(0);
         }
     }
@@ -101,14 +108,14 @@ public class InitAppState extends AbstractAppState
             case REQUEST_DENIED:
                 JOptionPane.showMessageDialog(
                         null,
-                        "Looks like there were already two people on the server. Sorry!",
+                        "You cannot connect to the server because there were too many people.",
                         "Too many people",
                         JOptionPane.ERROR_MESSAGE);
                 app.stop();
                 break;
         }
 
-        // Go to the next stage, which could be either waiting or playing.
+        // Go to the next stage, which could be either waiting or playing, depending on if you're player 1 or player 2.
         app.nextAppState();
     }
 }

@@ -142,14 +142,17 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
 
         // This one binds jumping to the spacebar
         inputManager.addMapping("Jump", new KeyTrigger(KeyInput.KEY_SPACE));
-
+        // This allows you to duck by pressing shift
+        inputManager.addMapping("Duck", new KeyTrigger(KeyInput.KEY_LSHIFT));
+        
+        // Allows you to enter disco mode by pressing Y
         inputManager.addMapping("Disco", new KeyTrigger(KeyInput.KEY_Y));
-
-        inputManager.addMapping("Disco", new KeyTrigger(KeyInput.KEY_Y));
+        // The same for debug mode (with button B)
         inputManager.addMapping("Debug", new KeyTrigger(KeyInput.KEY_B));
+        // The same for capturing/uncapturing the mouse (with button X)
         inputManager.addMapping("CaptureMouse", new KeyTrigger(KeyInput.KEY_X));
 
-        // Joystick bindings
+        /* Joystick bindings */
 
         // If the joystick does not go more than halfway through, don't move.
         // This is to avoid calibration errors.
@@ -171,11 +174,15 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
                     joystick.getAxis(JoystickAxis.X_AXIS).assignAxis("Right", "Left");
                     joystick.getAxis(JoystickAxis.Y_AXIS).assignAxis("Backward", "Forward");
 
+                    // Binds the buttons to certain actions.
                     joystick.getButton(JoystickButton.BUTTON_2).assignButton("Jump");
                     joystick.getButton(JoystickButton.BUTTON_0).assignButton("Disco");
                     joystick.getButton(JoystickButton.BUTTON_1).assignButton("Debug");
                     joystick.getButton(JoystickButton.BUTTON_3).assignButton("CaptureMouse");
-
+                    joystick.getButton(JoystickButton.BUTTON_5).assignButton("Duck");
+                    
+                    // Binds the right stick to looking around.
+                    // Since we use the same action name as the keyboard inputs registered by the engine, it handles the looking for us.
                     joystick.getAxis(JoystickAxis.Z_AXIS).assignAxis(CameraInput.CHASECAM_MOVERIGHT, CameraInput.CHASECAM_MOVELEFT);
                     joystick.getAxis(JoystickAxis.Z_ROTATION).assignAxis(CameraInput.CHASECAM_DOWN, CameraInput.CHASECAM_UP);
                 }
@@ -274,9 +281,11 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         // Handle the movement animations
         handleAnimations();
 
+        // Removes the Y component to avoid a 'flying' bug that was occuring
+        walkDirection.setY(0f);
+        // Normalizes the vector and multiplies by the speed to add some speed
         walkDirection.normalizeLocal();
         walkDirection.multLocal(moveSpeed);
-        walkDirection.setY(0f);
 
         // Set the current direction that we are looking at as the "forward" direction
         viewDirection.set(forwardVector);
