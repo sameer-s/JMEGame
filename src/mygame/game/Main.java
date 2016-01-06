@@ -40,10 +40,20 @@ public class Main extends SimpleApplication
      */
     Client client;
 
+    /**
+     * A listener for messages sent by the server. 
+     */
     ClientMessageListener clientMessageListener;
 
+    /**
+     * A flag. true if this player is player 1, false otherwise.
+     */
     boolean isPlayer1;
 
+    /**
+     * Tracks the current state of  the app.
+     * Three states currently exist, Init, Wait and Play.
+     */
     private AppState currentAppState;
 
 

@@ -39,7 +39,8 @@ public class InitAppState extends AbstractAppState
                                    ConnectionRequestMessage.class,
                                    PlayerConnectionMessage.class);
 
-        String address = (String) JOptionPane.showInputDialog(null, "Enter the address of the server.\nBlank assumes 'localhost'.",
+        String address = (String) JOptionPane.showInputDialog(null,
+                "Enter the address of the server.\nBlank assumes 'localhost'.",
                 "Server address?",
                 JOptionPane.QUESTION_MESSAGE,
                 null,
@@ -70,7 +71,7 @@ public class InitAppState extends AbstractAppState
             app.stop();
             JOptionPane.showMessageDialog(
                 null,
-                "Looks like we were unable to connect to the server.",
+                "Unable to connect to the server.\nReason: " + e.getLocalizedMessage(),
                 "Error: " + e.getClass().getName(),
                 JOptionPane.ERROR_MESSAGE);
             System.exit(0);
