@@ -55,6 +55,8 @@ public class Main extends SimpleApplication
     @Override
     public void simpleInitApp()
     {
+        settings.setUseJoysticks(true);
+        
         this.setPauseOnLostFocus(false);
         // Disables the default "fly" cam, we will use a different one. Keeping it enabled causes GUI bugs.
         flyCam.setEnabled(false);

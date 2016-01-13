@@ -118,7 +118,7 @@ public class PlayAppState extends AbstractAppState implements ActionListener
 
         // Makes some adjustment so it works properly
         playerModel.scale(2f);
-        playerModel.setLocalTranslation(20f, 20f, 20f);
+        playerModel.setLocalTranslation(this.app.isPlayer1 ? 20f : 0f, this.app.isPlayer1 ? 20f : 25f, this.app.isPlayer1 ? 20f: 0f);
 
         // Creates the chase camera. The chase camera is a camera which rotates
         // and zooms around the player. There are some configuration changes
@@ -207,15 +207,18 @@ public class PlayAppState extends AbstractAppState implements ActionListener
     }
 
     // Variables to describe the current state of the other player
-    private Vector3f otherCharacterLocation = new Vector3f();
+    private Vector3f otherCharacterLocation = null;
     private Quaternion otherCharacterRotation = new Quaternion();
     private String[] otherCharacterAnims = null;
+
+    private boolean firstUpdate = true;
 
     // A flag. True if we are currently in disco mode, false otherwise.
     private boolean disco = false;
     // The time, for disco mode. Restarts (at zero) after every disco iteration.
     private float t = 0;
     // Called in a loop by the engine to allow the game to make changes.
+    
     @Override
     public void update(float tpf)
     {
@@ -227,6 +230,13 @@ public class PlayAppState extends AbstractAppState implements ActionListener
 
         // Adjusts the other player's state based on what we have recieved
         app.otherPlayer.setLocalTranslation(NetworkedCharacterHandlers.MovementHandler.move(app.otherPlayer.getLocalTranslation(), otherCharacterLocation, tpf));
+        
+        if(firstUpdate && otherCharacterLocation != null)
+        {
+            app.otherPlayer.setLocalTranslation(otherCharacterLocation);
+            firstUpdate = false;
+        }
+        
         app.otherPlayer.setLocalRotation(otherCharacterRotation);
         // avoid null pointer
         if(otherCharacterAnims != null)
@@ -249,7 +259,7 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         // Reset the timer every quarter second (this can be toggled for faster or slower disco)
         if(t >= .25) t = 0;
     }
-
+    
     // Called by our message listener when the other player sends out its info
     public void updateOpponentLocation(PlayerInformationMessage m)
     {

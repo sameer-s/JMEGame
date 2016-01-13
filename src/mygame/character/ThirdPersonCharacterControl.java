@@ -167,6 +167,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
             // ... for each joystick ...
             for(Joystick joystick : joysticks)
             {
+                System.out.printf("Joystick found! name = %s, id=%i%n", joystick.getName(), joystick.getJoyId());
                 // ... if its ID matches the provided one ...
                 if(joystick.getJoyId() == joystickId)
                 {
@@ -187,6 +188,10 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
                     joystick.getAxis(JoystickAxis.Z_ROTATION).assignAxis(CameraInput.CHASECAM_DOWN, CameraInput.CHASECAM_UP);
                 }
             }
+        }
+        else
+        {
+            System.out.println("No joysticks found");
         }
 
         // Adds listeners for the action

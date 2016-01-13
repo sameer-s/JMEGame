@@ -25,7 +25,9 @@ public class NetworkedCharacterHandlers
     public static class MovementHandler
     {
         public static Vector3f move(Vector3f location, Vector3f target, float tpf)
-        {
+        {           
+            if(target == null) return location;
+            
             final float distance = location.distance(target);
             if(distance == 0)
                 return location;
