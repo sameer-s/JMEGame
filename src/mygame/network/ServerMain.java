@@ -10,6 +10,7 @@ import com.jme3.network.Server;
 import com.jme3.network.serializing.Serializer;
 import com.jme3.system.JmeContext;
 import java.io.IOException;
+import java.net.Inet4Address;
 import mygame.network.message.ConnectionRequestMessage;
 import mygame.network.message.ConnectionRequestMessage.ConnectionStatus;
 import mygame.network.message.PlayerConnectionMessage;
@@ -60,6 +61,8 @@ public class ServerMain extends SimpleApplication implements ConnectionListener,
             server.addConnectionListener(this);
             // Allows this to recieve messages from clients
             server.addMessageListener(this);
+            
+            System.out.printf("Server hosted:%n\tIP=\"%s\"%n\tPort=\"%d\"", Inet4Address.getLocalHost().getHostAddress(), PORT);
         }
         catch(IOException e)
         {
