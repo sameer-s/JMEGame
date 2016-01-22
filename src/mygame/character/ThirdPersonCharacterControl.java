@@ -443,7 +443,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
 
         // Tells the message to use UDP rather than TCP protocol
         // TCP -> slow, reliable (no packet loss)
-        // UDP -> fast, unreliable (packet loss)
+        // UDP -> fast, unreliable (packet loss, messages may appear in the wrong order)
         message.setReliable(false);
         // Returns the message
         return message;
@@ -452,10 +452,17 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
     @Override
     protected CollisionShape getShape()
     {
-        // Does the exact same as the superclass implementation but adds a height offset
-        CapsuleCollisionShape capsuleCollisionShape = new CapsuleCollisionShape(getFinalRadius(), (getFinalHeight() - (2 * getFinalRadius())));
+        return generateShape();
+    }
+    
+    public static CollisionShape generateShape()
+    {
+        // Generates a collision shape for this.
+        // This does the exact same thing that the superclass does, but adds a height offset
+        // The parameteres for the collider are defined as the static constants in the class
+        CapsuleCollisionShape capsuleCollisionShape = new CapsuleCollisionShape(_radius, (_height - (2 * _radius)));
         CompoundCollisionShape compoundCollisionShape = new CompoundCollisionShape();
-        Vector3f addLocation = new Vector3f(0, (getFinalHeight() / 2.0f) + heightOffset, 0);
+        Vector3f addLocation = new Vector3f(0, (_height / 2.0f) + heightOffset, 0);
         compoundCollisionShape.addChildShape(capsuleCollisionShape, addLocation);
         return compoundCollisionShape;
     }
