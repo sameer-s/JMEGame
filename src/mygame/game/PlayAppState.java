@@ -4,7 +4,6 @@ import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.bullet.BulletAppState;
-import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
 import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
@@ -14,19 +13,14 @@ import com.jme3.input.controls.KeyTrigger;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.RenderState;
 import com.jme3.math.ColorRGBA;
-import com.jme3.math.FastMath;
-import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import java.util.HashMap;
 import javax.swing.JOptionPane;
-import mygame.character.NetworkedCharacterHandlers;
+import mygame.character.NetworkedCharacterControl;
 import mygame.character.ThirdPersonCharacterControl;
-import static mygame.character.ThirdPersonCharacterControl._height;
-import static mygame.character.ThirdPersonCharacterControl._mass;
-import static mygame.character.ThirdPersonCharacterControl._radius;
 import mygame.gui.GUIConsole;
 import mygame.network.message.PlayerInformationMessage;
 import org.lwjgl.input.Keyboard;
@@ -110,7 +104,7 @@ public class PlayAppState extends AbstractAppState implements ActionListener
 
         // Sets up the HashMaps we use for animation
         setupAnimMaps();
-        
+
 
         // Loads the player model (player 1 -> male, player 2 -> female)
         Spatial playerModel = this.app.getAssetManager()
@@ -151,26 +145,16 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         bulletAppState.getPhysicsSpace().add(playerModel);
 
         // Loads the opposite model for your opponent
-        this.app.otherPlayer = this.app.getAssetManager().loadModel(this.app.isPlayer1 ? FEMALE_MODEL : MALE_MODEL);
-        // Makes some adjustment so it works properly
-        this.app.otherPlayer.scale(2.f);
-        this.app.otherPlayer.rotate(0f, 180f * FastMath.DEG_TO_RAD, 0f);
-        this.app.otherPlayer.setLocalTranslation(0, -200f, 0f);
+        Spatial otherPlayer = this.app.getAssetManager().loadModel(this.app.isPlayer1 ? FEMALE_MODEL : MALE_MODEL);
+        // Scales it up to match the size of the world appropriately
+        otherPlayer.scale(2.f);
 
-        // Attaches it to the root node
-        this.app.getRootNode().attachChild(this.app.otherPlayer);
-        bulletAppState.getPhysicsSpace().add(this.app.otherPlayer);
+        this.app.getRootNode().attachChild(otherPlayer);
+        bulletAppState.getPhysicsSpace().add(otherPlayer);
 
-        // Sets up the animations for the other player
-        NetworkedCharacterHandlers.AnimationHandler.init(this.app.otherPlayer, this.app.isPlayer1 ? FEMALE_ANIMS : MALE_ANIMS);
-        // Gives it a 'rigid body' so it can exist in the Bullet Physics world
-        RigidBodyControl otherPlayerControl = new RigidBodyControl(_mass);
-        // Creates a collider based on a capsule.
-        otherPlayerControl.setCollisionShape(new CapsuleCollisionShape(_radius, _height));
-        // States that this rigid body moves.
-        otherPlayerControl.setKinematic(true);
-        // Adds the rigid body.
-        this.app.otherPlayer.addControl(otherPlayerControl);
+        this.app.otherPlayerController = new NetworkedCharacterControl();
+        otherPlayer.addControl(this.app.otherPlayerController);
+        this.app.otherPlayerController.initAnimations(this.app.isPlayer1 ? FEMALE_ANIMS : MALE_ANIMS);
 
         // Creates a sun (a light) so that the player can see.
         DirectionalLight sun = new DirectionalLight();
@@ -206,19 +190,12 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         this.app.getInputManager().addListener(this, "Disco", "Debug", "CaptureMouse");
     }
 
-    // Variables to describe the current state of the other player
-    private Vector3f otherCharacterLocation = null;
-    private Quaternion otherCharacterRotation = new Quaternion();
-    private String[] otherCharacterAnims = null;
-
-    private boolean firstUpdate = true;
-
     // A flag. True if we are currently in disco mode, false otherwise.
     private boolean disco = false;
     // The time, for disco mode. Restarts (at zero) after every disco iteration.
     private float t = 0;
     // Called in a loop by the engine to allow the game to make changes.
-    
+
     @Override
     public void update(float tpf)
     {
@@ -228,23 +205,7 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         // Sends out the current state of OUR player to the other client, in message form
         app.client.send(app.playerController.toMessage());
 
-        // Adjusts the other player's state based on what we have recieved
-        app.otherPlayer.setLocalTranslation(NetworkedCharacterHandlers.MovementHandler.move(app.otherPlayer.getLocalTranslation(), otherCharacterLocation, tpf));
-        
-        if(firstUpdate && otherCharacterLocation != null)
-        {
-            app.otherPlayer.setLocalTranslation(otherCharacterLocation);
-            firstUpdate = false;
-        }
-        
-        app.otherPlayer.setLocalRotation(otherCharacterRotation);
-        // avoid null pointer
-        if(otherCharacterAnims != null)
-        {
-            // Update the animations on the opposing player based on what the messge listener recieved
-            NetworkedCharacterHandlers.AnimationHandler.updateAnims(otherCharacterAnims);
-        }
-
+        app.otherPlayerController.update(tpf);
 
         // If time = 0 (we are ready to update the sky color)
         if(t == 0)
@@ -259,14 +220,11 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         // Reset the timer every quarter second (this can be toggled for faster or slower disco)
         if(t >= .25) t = 0;
     }
-    
+
     // Called by our message listener when the other player sends out its info
     public void updateOpponentLocation(PlayerInformationMessage m)
     {
-        // Updates the corresponding variables
-        otherCharacterLocation = new Vector3f(m.location[0], m.location[1], m.location[2]);
-        otherCharacterRotation = new Quaternion(m.rotation[0], m.rotation[1], m.rotation[2], m.rotation[3]);
-        otherCharacterAnims = m.currentAnims;
+        app.otherPlayerController.recieveMessage(m);
     }
 
     // Called by our message listener when the other player disconnects
@@ -290,7 +248,7 @@ public class PlayAppState extends AbstractAppState implements ActionListener
     {
         // Log that an action occured. Debug statement.
         System.out.printf("Action, name=%s, isPressed=%b", name, isPressed);
-        
+
         // If it is a disco action, and we are pressing the button (not releasing)
         if(name.equals("Disco") && isPressed)
         {

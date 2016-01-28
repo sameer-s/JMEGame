@@ -4,8 +4,8 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AppState;
 import com.jme3.font.BitmapFont;
 import com.jme3.network.Client;
-import com.jme3.scene.Spatial;
 import com.jme3.system.AppSettings;
+import mygame.character.NetworkedCharacterControl;
 import mygame.character.ThirdPersonCharacterControl;
 import mygame.network.ClientMessageListener;
 
@@ -26,17 +26,15 @@ public class Main extends SimpleApplication
     // The player controller for the player controlled by THIS client.
     ThirdPersonCharacterControl playerController;
 
-    // The spatial for the player controlled by the OTHER client. 
-    // This is not a controller, but that will probably be implemented later.
-    Spatial otherPlayer;
+    NetworkedCharacterControl otherPlayerController;
 
     // The networking client.
     Client client;
 
-    // A listener for messages sent by the server. 
+    // A listener for messages sent by the server.
     ClientMessageListener clientMessageListener;
 
-    // A flag. true if this player is player 1, false otherwise. 
+    // A flag. true if this player is player 1, false otherwise.
     boolean isPlayer1;
 
     // Tracks the current state of the app.
@@ -56,7 +54,7 @@ public class Main extends SimpleApplication
     public void simpleInitApp()
     {
         settings.setUseJoysticks(true);
-        
+
         this.setPauseOnLostFocus(false);
         // Disables the default "fly" cam, we will use a different one. Keeping it enabled causes GUI bugs.
         flyCam.setEnabled(false);
@@ -148,7 +146,7 @@ public class Main extends SimpleApplication
     {
         return guiFont;
     }
-    
+
     /**
      * Gets the settings established by the player in the settings menu.
      * @return The settings.
