@@ -39,11 +39,11 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
     // Multiple of these can be true at any given time.
     private boolean forward, backward, left, right;
 
-    // Constants describing the movement of the character
-    static final float moveSpeed = 10f, jumpBoost = 1f;
+    // Constants describing the movement of the character 
+    protected static float moveSpeed = 10f, jumpBoost = 1f;
 
     // Constants describing the physical characteristics of the character
-    public static final float _radius = .6f, _height = 3.4f, heightOffset = .1f, _mass = 1f;
+    public static float _radius = .6f,_height = 3.4f, xOffset = 0, yOffset = .1f, zOffset = 0, _mass = 1f;
 
     // The instance of the JME camera class that we use to find out which way the player is looking.
     @SuppressWarnings("FieldMayBeFinal")
@@ -76,6 +76,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         "Tops"
     };
 
+    static boolean animate = false;
 
     /**
      * Constructor for the control.
@@ -101,7 +102,8 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
 
         // This loops over each of the body parts that are created with the
         // Mixamo FUSE tool for creating characters
-        for(String bodyNode : bodyNodes)
+        
+        if(animate) for(String bodyNode : bodyNodes)
         {
             // Gets the Spatial corresponding to that String
             Spatial bodyPart = ((Node) spatial).getChild(bodyNode);
@@ -159,8 +161,10 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         inputManager.setAxisDeadZone(0.5f);
 
         // Gets a list of the current joysticks.
+        
         Joystick[] joysticks = inputManager.getJoysticks();
 
+        System.out.println(joysticks == null ? 0 : joysticks.length);
         // If there are any joysticks...
         if(joysticks != null)
         {
@@ -204,6 +208,8 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
     @Override
     public void onAction(String action, boolean isPressed, float tpf)
     {
+        boolean _onGround = isOnGround();
+        _onGround = true;
         // What was the name of the button event?
         switch (action)
         {
@@ -211,16 +217,16 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
             // isPressed = true -> press event
             // isPressed = false -> release event
             case "Forward":
-                forward = isPressed;
+                forward = _onGround && isPressed;
                 break;
             case "Left":
-                left = isPressed;
+                left = _onGround && isPressed;
                 break;
             case "Backward":
-                backward = isPressed;
+                backward = _onGround && isPressed;
                 break;
             case "Right":
-                right = isPressed;
+                right = _onGround && isPressed;
                 break;
             // If it's a jump event, jump,.
             case "Jump":
@@ -386,6 +392,8 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
      */
     private String getAnim()
     {
+        if(!animate) return "";
+
         // Calls the other getAnim method with the first value in the
         // set of all animation channels.
         return getAnim(animChannels.keySet().iterator().next());
@@ -398,6 +406,8 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
      */
     private String getAnim(String channel)
     {
+        if(!animate) return "";
+        
         // Gets the name (as registered in the model) of the current animation
         String anim = animChannels.get(channel).getAnimationName();
         // Creates a variable to store the corresponding key (the name of the animation in our naming system)
@@ -462,7 +472,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         // The parameteres for the collider are defined as the static constants in the class
         CapsuleCollisionShape capsuleCollisionShape = new CapsuleCollisionShape(_radius, (_height - (2 * _radius)));
         CompoundCollisionShape compoundCollisionShape = new CompoundCollisionShape();
-        Vector3f addLocation = new Vector3f(0, (_height / 2.0f) + heightOffset, 0);
+        Vector3f addLocation = new Vector3f(xOffset, (_height / 2.0f) + yOffset, zOffset);
         compoundCollisionShape.addChildShape(capsuleCollisionShape, addLocation);
         return compoundCollisionShape;
     }

@@ -96,6 +96,8 @@ public class NetworkedCharacterControl extends RigidBodyControl
 
     public void initAnimations(HashMap<String, String> nameMap)
     {
+        if(!ThirdPersonCharacterControl.animate) return;
+        
         channels = new AnimChannel[ThirdPersonCharacterControl.bodyNodes.length];
 
         for(int i = 0; i < ThirdPersonCharacterControl.bodyNodes.length; i++)
@@ -110,6 +112,8 @@ public class NetworkedCharacterControl extends RigidBodyControl
 
     private void animate(PlayerInformationMessage m)
     {
+        if(!ThirdPersonCharacterControl.animate) return;
+
         boolean allSame = true;
 
         for(int i = 0; i < channels.length; i++)

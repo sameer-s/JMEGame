@@ -3,11 +3,9 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/Sameer/Work/Java/JMonkeyEngine/Projects/JMEGame/src/mygame/game/InitAppState.java</file>
-            <file>file:/C:/Users/Sameer/Work/Java/JMonkeyEngine/Projects/JMEGame/src/mygame/game/Main.java</file>
-            <file>file:/C:/Users/Sameer/Work/Java/JMonkeyEngine/Projects/JMEGame/src/mygame/character/ThirdPersonCharacterControl.java</file>
-            <file>file:/C:/Users/Sameer/Work/Java/JMonkeyEngine/Projects/JMEGame/src/mygame/network/ServerMain.java</file>
-            <file>file:/C:/Users/Sameer/Work/Java/JMonkeyEngine/Projects/JMEGame/src/mygame/game/PlayAppState.java</file>
+            <file>file:/C:/Users/ssuri4121/Documents/jme/JMEGame/src/mygame/character/NetworkedCharacterControl.java</file>
+            <file>file:/C:/Users/ssuri4121/Documents/jme/JMEGame/src/mygame/game/PlayAppState.java</file>
+            <file>file:/C:/Users/ssuri4121/Documents/jme/JMEGame/src/mygame/character/ThirdPersonCharacterControl.java</file>
         </group>
     </open-files>
 </project-private>

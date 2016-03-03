@@ -20,6 +20,7 @@ import com.jme3.scene.Spatial;
 import java.util.HashMap;
 import javax.swing.JOptionPane;
 import mygame.character.NetworkedCharacterControl;
+import mygame.character.ShipCharacterControl;
 import mygame.character.ThirdPersonCharacterControl;
 import mygame.gui.GUIConsole;
 import mygame.network.message.PlayerInformationMessage;
@@ -36,8 +37,9 @@ public class PlayAppState extends AbstractAppState implements ActionListener
     private Main app;
 
     // These are, for now, both the male model. This will be changed at some point.
-    private static final String MALE_MODEL = "Models/MainCharacter3_2/MainCharacter3_2.j3o",
-                              FEMALE_MODEL = "Models/MainCharacter3_2/MainCharacter3_2.j3o";
+    private static final String MALE_MODEZ = "Models/MainCharacter3_2/MainCharacter3_2.j3o", 
+                                MALE_MODEL = "Models/ship/v1.j3o",
+                              FEMALE_MODEL = MALE_MODEL;
 
     // Maps the names that the Third Person Character Controller class uses to animations to that the model uses.
     // Holds the animations for the male and female player
@@ -98,10 +100,11 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         sceneModel.addControl(scene);
         // Attaches the model to the root node
         // This makes it appear in the world
+        /*
         this.app.getRootNode().attachChild(sceneModel);
         // Registers the model with the Bullet Physics Engine
         bulletAppState.getPhysicsSpace().add(scene);
-
+        */
         // Sets up the HashMaps we use for animation
         setupAnimMaps();
 
@@ -111,7 +114,7 @@ public class PlayAppState extends AbstractAppState implements ActionListener
                 .loadModel(this.app.isPlayer1 ? MALE_MODEL : FEMALE_MODEL);
 
         // Makes some adjustment so it works properly
-        playerModel.scale(2f);
+        playerModel.scale(.5f);
         playerModel.setLocalTranslation(this.app.isPlayer1 ? 20f : 0f, this.app.isPlayer1 ? 20f : 25f, this.app.isPlayer1 ? 20f: 0f);
 
         // Creates the chase camera. The chase camera is a camera which rotates
@@ -128,9 +131,7 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         chaseCam.setRotationSpeed(2f);
 
         // Creates our new character controller, passing in a few necessary parameters.
-        this.app.playerController = new ThirdPersonCharacterControl(
-                this.app.isPlayer1 ? MALE_ANIMS : FEMALE_ANIMS,
-                playerModel, this.app.getCamera());
+        this.app.playerController = new ShipCharacterControl(playerModel, this.app.getCamera());
 
         // Initializes button presses and joysticks
         this.app.playerController.initKeys(this.app.getInputManager(), this.app.isPlayer1 ? 1 : 0);
