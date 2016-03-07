@@ -10,6 +10,8 @@ import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.AnalogListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.input.controls.MouseAxisTrigger;
+import com.jme3.math.FastMath;
+import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
 import com.jme3.scene.Spatial;
@@ -34,12 +36,12 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
 
     // Constants describing the movement of the character
     private int throttle = 0;
-    static final float maxSpeed = 10;
+    static final float maxSpeed = 3;
 
     // Constants describing the characteristics of the character's hitbox.
     static float _radius = .6f,_height = 3.4f, xOffset = 0, yOffset = .1f, zOffset = 0;
 
-    static float _mass = 1f;
+    static float _mass = 0f;
 
     // The instance of the JME camera class that we use to find out which way the player is looking.
     @SuppressWarnings("FieldMayBeFinal")
@@ -70,11 +72,15 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
     {
         // Binds keys to their respective actions
 
-	inputManager.addMapping("RotL", new MouseAxisTrigger(MouseInput.AXIS_X, true));
-	inputManager.addMapping("RotR", new MouseAxisTrigger(MouseInput.AXIS_X, false));
-	inputManager.addMapping("RotU", new MouseAxisTrigger(MouseInput.AXIS_Y, true));
-	inputManager.addMapping("RotD", new MouseAxisTrigger(MouseInput.AXIS_Y, false));
+//	inputManager.addMapping("RotL", new MouseAxisTrigger(MouseInput.AXIS_X, true));
+//	inputManager.addMapping("RotR", new MouseAxisTrigger(MouseInput.AXIS_X, false));
+//	inputManager.addMapping("RotU", new MouseAxisTrigger(MouseInput.AXIS_Y, true));
+//	inputManager.addMapping("RotD", new MouseAxisTrigger(MouseInput.AXIS_Y, false));
 
+        
+	inputManager.addMapping("RotL", new KeyTrigger(Keyboard.KEY_A));
+	inputManager.addMapping("RotR", new KeyTrigger(Keyboard.KEY_D));
+        
         inputManager.addMapping("Throttle+", new KeyTrigger(Keyboard.KEY_W));
         inputManager.addMapping("Throttle-", new KeyTrigger(Keyboard.KEY_S));
 
@@ -84,12 +90,17 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         inputManager.addListener(this, "RotL", "RotR", "RotD", "RotU", "Throttle+", "Throttle-");
     }
 
+    private Quaternion rot = new Quaternion();
     // Notifies the character controller when a button event occurs.
     @Override
     public void onAction(String action, boolean isPressed, float tpf)
     {
         switch(action)
         {
+            case "RotL":
+                break;
+            case "RotR":
+                break;
             case "Throttle+":
                 throttle = 100;
                 break;
@@ -104,26 +115,20 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
     {
     }
 
-    // Contains the direction that is currently 'forward', for the character
-    Vector3f forwardVector = new Vector3f();
-
     // Handles movement as the game goes on.
     @Override
     public void update(float tpf)
     {
         // Has the superclass take care of physics stuff
         super.update(tpf);
-
-    //    Vector3f modelForwardDir = cam.getRotation().mult(Vector3f.UNIT_Z).multLocal(1, 0, 1);
-
-        walkDirection.set(this.cam.getRotation().mult(Vector3f.UNIT_XYZ));
-        walkDirection.setY(0);
-        walkDirection.normalizeLocal();
-        walkDirection.multLocal((((float) throttle) / 100f) * maxSpeed);
-
-        this.setViewDirection(cam.getRotation().mult(new Vector3f(1,0,0)));
-
-        this.setPhysicsRotation(this.cam.getRotation());
+        
+        Vector3f _rotation = this.cam.getRotation().mult(Vector3f.UNIT_XYZ);
+                
+        System.out.printf("Cam rotation is [%f, %f, %f]%n", _rotation.x, _rotation.y, _rotation.z);
+        System.out.printf("View vector is [%f, %f, %f]%n", viewDirection.x, viewDirection.y, viewDirection.z);      
+                        
+        this.setPhysicsRotation(rot);
+        this.spatial.setLocalRotation(rot);
     }
 
     /**

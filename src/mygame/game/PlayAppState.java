@@ -16,6 +16,8 @@ import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
 import com.jme3.util.SkyFactory;
 import com.jme3.util.SkyFactory.EnvMapType;
+import java.util.Arrays;
+import java.util.stream.Stream;
 import javax.swing.JOptionPane;
 import mygame.character.ThirdPersonCharacterControl;
 import mygame.network.message.PlayerInformationMessage;
@@ -50,12 +52,38 @@ public class PlayAppState extends AbstractAppState implements ActionListener
 
         bulletAppState.getPhysicsSpace().setGravity(Vector3f.ZERO);
 
-        Geometry cube = new Geometry("cube", new Box(1,1,1));
+        Geometry[] cubes = new Geometry[] {
+//          new Geometry("cube1"),
+//          new Geometry("cube2"),
+//          new Geometry("cube3"),
+        };
+        
         Material mat = new Material(this.app.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
-        mat.setColor("Color", ColorRGBA.Blue);
-        cube.setMaterial(mat);
-        this.app.getRootNode().attachChild(cube);
-        cube.setLocalTranslation(5, 5, 5);
+        
+        Stream.of(cubes).forEach(cube -> {
+            int i = Arrays.asList(cubes).indexOf(cube);
+            
+            Box b = new Box(1, 1, 1);
+            cube.setMesh(b);
+        
+            if(i == 0)
+            {
+                Material mat0 = mat.clone();
+                
+                mat0.setColor("Color", ColorRGBA.Red);
+                
+                cube.setMaterial(mat0);
+            }
+            else
+            {
+                mat.setColor("Color", ColorRGBA.Blue);
+                cube.setMaterial(mat);
+            }
+            
+            this.app.getRootNode().attachChild(cube);
+            
+            cube.setLocalTranslation(0, 0, 3*i);
+        });
 
         // Loads the space scene
         this.app.getRootNode().attachChild(SkyFactory.createSky(
@@ -89,6 +117,7 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         chaseCam.setDefaultDistance(7f);
         // Speeds up the rotation, as the default is quite slow.
         chaseCam.setRotationSpeed(2f);
+
         chaseCam.setMaxVerticalRotation(FastMath.PI / 2);
         chaseCam.setMinVerticalRotation(-FastMath.PI);
 
