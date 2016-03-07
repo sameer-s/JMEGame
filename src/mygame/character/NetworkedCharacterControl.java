@@ -1,13 +1,8 @@
 package mygame.character;
 
-import com.jme3.animation.AnimChannel;
-import com.jme3.animation.AnimControl;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
-import com.jme3.scene.Node;
-import com.jme3.scene.Spatial;
-import java.util.HashMap;
 import mygame.network.message.PlayerInformationMessage;
 
 /**
@@ -47,8 +42,6 @@ public class NetworkedCharacterControl extends RigidBodyControl
 
         move(m, tpf);
         rotate(m);
-        animate(m);
-
         System.out.println("" + i + j + k + currentLocation + this.spatial.getLocalTranslation() + this.getPhysicsLocation());
     }
 
@@ -70,7 +63,7 @@ public class NetworkedCharacterControl extends RigidBodyControl
             if(distance != 0)
             {
                 final Vector3f movement = targetLocation.subtract(currentLocation);
-                final Vector3f adjusted = movement.mult((tpf * ThirdPersonCharacterControl.moveSpeed) / distance);
+                final Vector3f adjusted = movement.mult((tpf * ThirdPersonCharacterControl.maxSpeed) / distance);
 
                 currentLocation = adjusted.length() > movement.length() ? movement.add(currentLocation) : adjusted.add(currentLocation);
             }
@@ -89,79 +82,5 @@ public class NetworkedCharacterControl extends RigidBodyControl
         currentRotation = new Quaternion(m.rotation[0], m.rotation[1], m.rotation[2], m.rotation[3]);
 
         this.spatial.setLocalRotation(currentRotation);
-    }
-
-    private AnimChannel[] channels;
-    private HashMap<String, String> nameMap;
-
-    public void initAnimations(HashMap<String, String> nameMap)
-    {
-        if(!ThirdPersonCharacterControl.animate) return;
-        
-        channels = new AnimChannel[ThirdPersonCharacterControl.bodyNodes.length];
-
-        for(int i = 0; i < ThirdPersonCharacterControl.bodyNodes.length; i++)
-        {
-            Spatial bodyPart = ((Node) spatial).getChild(ThirdPersonCharacterControl.bodyNodes[i]);
-
-            channels[i] = bodyPart.getControl(AnimControl.class).createChannel();
-        }
-
-        this.nameMap = nameMap;
-    }
-
-    private void animate(PlayerInformationMessage m)
-    {
-        if(!ThirdPersonCharacterControl.animate) return;
-
-        boolean allSame = true;
-
-        for(int i = 0; i < channels.length; i++)
-        {
-            if(!getAnim(i).equals(m.currentAnims[i]))
-            {
-                allSame = false;
-                break;
-            }
-        }
-
-        if(allSame) return;
-
-        for(int i = 0; i < ThirdPersonCharacterControl.bodyNodes.length; i++)
-        {
-            channels[i].setAnim(nameMap.get(m.currentAnims[i]));
-        }
-    }
-
-    /**
-     * Gets the currently running animation for an animation channel.
-     * @param i The index of the animation channel.
-     * @return Its current animation.
-     */
-    private String getAnim(int i)
-    {
-        // Gets the name (as registered in the model) of the current animation
-        String anim = channels[i].getAnimationName();
-        // If the animation is null, return a blank string.
-        // This is to avoid NullPointerExceptions
-        if (anim == null)
-        {
-            return "";
-        }
-        // Creates a variable to store the corresponding key (the name of the animation in our naming system)
-        String animKey = anim;
-        // For each possible animation key
-        for (String key : nameMap.keySet())
-        {
-            // If its corresponding animation matches the one that is currently running
-            if (anim.equals(nameMap.get(key)))
-            {
-                // Set that as the correct key; break out of the for loop
-                animKey = key;
-                break;
-            }
-        }
-        // Return the animation key provided to you
-        return animKey;
     }
 }

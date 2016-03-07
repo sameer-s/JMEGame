@@ -59,7 +59,6 @@ public class Main extends SimpleApplication
         // Disables the default "fly" cam, we will use a different one. Keeping it enabled causes GUI bugs.
         flyCam.setEnabled(false);
 
-
         /*
             This game is implemented through App States.
             The first app state is Init.
