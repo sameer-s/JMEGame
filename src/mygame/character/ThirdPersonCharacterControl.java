@@ -5,12 +5,9 @@ import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.collision.shapes.CompoundCollisionShape;
 import com.jme3.bullet.control.BetterCharacterControl;
 import com.jme3.input.InputManager;
-import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.AnalogListener;
 import com.jme3.input.controls.KeyTrigger;
-import com.jme3.input.controls.MouseAxisTrigger;
-import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
@@ -36,7 +33,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
 
     // Constants describing the movement of the character
     private int throttle = 0;
-    static final float maxSpeed = 3;
+    static final float maxSpeed = 3, rotationSensitivity = 100;
 
     // Constants describing the characteristics of the character's hitbox.
     static float _radius = .6f,_height = 3.4f, xOffset = 0, yOffset = .1f, zOffset = 0;
@@ -77,10 +74,10 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
 //	inputManager.addMapping("RotU", new MouseAxisTrigger(MouseInput.AXIS_Y, true));
 //	inputManager.addMapping("RotD", new MouseAxisTrigger(MouseInput.AXIS_Y, false));
 
-        
+
 	inputManager.addMapping("RotL", new KeyTrigger(Keyboard.KEY_A));
 	inputManager.addMapping("RotR", new KeyTrigger(Keyboard.KEY_D));
-        
+
         inputManager.addMapping("Throttle+", new KeyTrigger(Keyboard.KEY_W));
         inputManager.addMapping("Throttle-", new KeyTrigger(Keyboard.KEY_S));
 
@@ -90,7 +87,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         inputManager.addListener(this, "RotL", "RotR", "RotD", "RotU", "Throttle+", "Throttle-");
     }
 
-    private Quaternion rot = new Quaternion();
+    private boolean rotL = false, rotR = false;
     // Notifies the character controller when a button event occurs.
     @Override
     public void onAction(String action, boolean isPressed, float tpf)
@@ -98,8 +95,10 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         switch(action)
         {
             case "RotL":
+                rotL = isPressed;
                 break;
             case "RotR":
+                rotR = isPressed;
                 break;
             case "Throttle+":
                 throttle = 100;
@@ -121,14 +120,30 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
     {
         // Has the superclass take care of physics stuff
         super.update(tpf);
-        
+
         Vector3f _rotation = this.cam.getRotation().mult(Vector3f.UNIT_XYZ);
-                
-        System.out.printf("Cam rotation is [%f, %f, %f]%n", _rotation.x, _rotation.y, _rotation.z);
-        System.out.printf("View vector is [%f, %f, %f]%n", viewDirection.x, viewDirection.y, viewDirection.z);      
-                        
-        this.setPhysicsRotation(rot);
-        this.spatial.setLocalRotation(rot);
+
+//        System.out.printf("Cam rotation is [%f, %f, %f]%n", _rotation.x, _rotation.y, _rotation.z);
+//        System.out.printf("View vector is [%f, %f, %f]%n", viewDirection.x, viewDirection.y, viewDirection.z);
+
+        float[] deltaRotation = new float[]{0, 0, 0};
+        if(rotL)
+        {
+            deltaRotation[2] += rotationSensitivity * tpf;
+        }
+        else if(rotR)
+        {
+            deltaRotation[2] += -rotationSensitivity * tpf;
+        }
+
+//        System.out.println(this.spatial.getLocalRotation().mult(Vector3f.UNIT_XYZ));
+        this.setPhysicsRotation(this.getSpatialRotation().add(new Quaternion().fromAngles(deltaRotation)));
+        this.spatial.rotate(new Quaternion().fromAngles(deltaRotation));
+
+//        walkDirection
+//        this.setPhysicsRotation(new Quaternion().fromAngles(1, 1, 1));
+
+        System.out.printf("Delta Rotation: [%f, %f, %f]%nrotL=%b\trotR=%b%n", deltaRotation[0], deltaRotation[1], deltaRotation[2], rotL, rotR);
     }
 
     /**

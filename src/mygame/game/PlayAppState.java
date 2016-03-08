@@ -12,11 +12,13 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
+import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
 import com.jme3.util.SkyFactory;
 import com.jme3.util.SkyFactory.EnvMapType;
 import java.util.Arrays;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import javax.swing.JOptionPane;
 import mygame.character.ThirdPersonCharacterControl;
@@ -32,7 +34,7 @@ public class PlayAppState extends AbstractAppState implements ActionListener
     // Holds a reference to the application
     private Main app;
 
-    private static final String SHIP_MODEL = "Models/ship/v1.j3o";
+    private static final String SHIP_MODEL = "Models/ship/v2.j3o";
 
     // When the app state first starts
     @Override
@@ -57,21 +59,21 @@ public class PlayAppState extends AbstractAppState implements ActionListener
 //          new Geometry("cube2"),
 //          new Geometry("cube3"),
         };
-        
+
         Material mat = new Material(this.app.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
-        
+
         Stream.of(cubes).forEach(cube -> {
             int i = Arrays.asList(cubes).indexOf(cube);
-            
+
             Box b = new Box(1, 1, 1);
             cube.setMesh(b);
-        
+
             if(i == 0)
             {
                 Material mat0 = mat.clone();
-                
+
                 mat0.setColor("Color", ColorRGBA.Red);
-                
+
                 cube.setMaterial(mat0);
             }
             else
@@ -79,9 +81,9 @@ public class PlayAppState extends AbstractAppState implements ActionListener
                 mat.setColor("Color", ColorRGBA.Blue);
                 cube.setMaterial(mat);
             }
-            
+
             this.app.getRootNode().attachChild(cube);
-            
+
             cube.setLocalTranslation(0, 0, 3*i);
         });
 
@@ -90,6 +92,22 @@ public class PlayAppState extends AbstractAppState implements ActionListener
                 this.app.getAssetManager(), "Textures/Starfield.dds", EnvMapType.CubeMap));
         // Loads the player model
         Spatial playerModel = this.app.getAssetManager().loadModel(SHIP_MODEL);
+
+        Recursive<Consumer<Spatial>> enableVertexColors = new Recursive<>();
+
+        enableVertexColors.function = sp ->
+        {
+            if(sp instanceof Node)
+            {
+                ((Node) sp).getChildren().stream().forEach(enableVertexColors.function);
+            }
+            else if(sp instanceof Geometry)
+            {
+                Material geomMat = ((Geometry) sp).getMaterial();
+                geomMat.setBoolean("UseVertexColor", true);
+                ((Geometry) sp).setMaterial(geomMat);
+            }
+        };
 
         // Makes some adjustment so it works properly
         playerModel.scale(.5f);
@@ -182,5 +200,10 @@ public class PlayAppState extends AbstractAppState implements ActionListener
             // Enable debug mode for the physics engine (show colliders)
             app.getStateManager().getState(BulletAppState.class).setDebugEnabled(!app.getStateManager().getState(BulletAppState.class).isDebugEnabled());
         }
+    }
+
+    private static class Recursive<T>
+    {
+        public T function;
     }
 }
