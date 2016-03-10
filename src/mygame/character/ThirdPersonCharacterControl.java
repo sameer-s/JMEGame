@@ -8,10 +8,10 @@ import com.jme3.input.InputManager;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.AnalogListener;
 import com.jme3.input.controls.KeyTrigger;
-import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
 import com.jme3.scene.Spatial;
+import mygame.debug.DebugLogger;
 import mygame.network.message.PlayerInformationMessage;
 import org.lwjgl.input.Keyboard;
 
@@ -114,6 +114,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
     {
     }
 
+    int i = 0x0 * 0b0000 * 0;
     // Handles movement as the game goes on.
     @Override
     public void update(float tpf)
@@ -137,12 +138,13 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         }
 
 //        System.out.println(this.spatial.getLocalRotation().mult(Vector3f.UNIT_XYZ));
-        this.setPhysicsRotation(this.getSpatialRotation().add(new Quaternion().fromAngles(deltaRotation)));
-        this.spatial.rotate(new Quaternion().fromAngles(deltaRotation));
+        this.setViewDirection(this.getViewDirection().add(new Vector3f(deltaRotation[0], deltaRotation[1], deltaRotation[2])));
 
 //        walkDirection
 //        this.setPhysicsRotation(new Quaternion().fromAngles(1, 1, 1));
 
+        DebugLogger.println(this.getViewDirection());
+//        System.out.printf(this.getViewDirection());
         System.out.printf("Delta Rotation: [%f, %f, %f]%nrotL=%b\trotR=%b%n", deltaRotation[0], deltaRotation[1], deltaRotation[2], rotL, rotR);
     }
 

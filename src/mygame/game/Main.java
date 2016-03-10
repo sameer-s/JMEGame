@@ -7,6 +7,7 @@ import com.jme3.network.Client;
 import com.jme3.system.AppSettings;
 import mygame.character.NetworkedCharacterControl;
 import mygame.character.ThirdPersonCharacterControl;
+import mygame.debug.DebugLogger;
 import mygame.network.ClientMessageListener;
 
 /**
@@ -86,6 +87,8 @@ public class Main extends SimpleApplication
         // Stops the networking to end the connection cleanly
         if(client != null)
             client.close();
+
+        DebugLogger.close();
 
         // Has the superclass finish cleanup
         super.destroy();
