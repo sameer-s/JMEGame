@@ -126,18 +126,18 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         bulletAppState.getPhysicsSpace().add(playerModel);
 
 
-        ChaseCamera chaseCam = new ChaseCamera(this.app.getCamera(), playerModel, this.app.getInputManager());
-        // By default, you have to push down a mouse button to rotate the chase cam. This disables that.
-        chaseCam.setDragToRotate(false);
-        // By default, it looks at the player model's (0,0,0), which is at its feet. This looks a bit higher.
-        chaseCam.setLookAtOffset(new Vector3f(0, 1f, 0));
-        // This keeps the camera a bit closer to the player than the default. This can be changed by the scroll wheel (on the mouse).
-        chaseCam.setDefaultDistance(7f);
-        // Speeds up the rotation, as the default is quite slow.
-        chaseCam.setRotationSpeed(2f);
-
-        chaseCam.setMaxVerticalRotation(FastMath.PI / 2);
-        chaseCam.setMinVerticalRotation(-FastMath.PI);
+//        ChaseCamera chaseCam = new ChaseCamera(this.app.getCamera(), playerModel, this.app.getInputManager());
+//        // By default, you have to push down a mouse button to rotate the chase cam. This disables that.
+//        chaseCam.setDragToRotate(false);
+//        // By default, it looks at the player model's (0,0,0), which is at its feet. This looks a bit higher.
+//        chaseCam.setLookAtOffset(new Vector3f(0, 1f, 0));
+//        // This keeps the camera a bit closer to the player than the default. This can be changed by the scroll wheel (on the mouse).
+//        chaseCam.setDefaultDistance(7f);
+//        // Speeds up the rotation, as the default is quite slow.
+//        chaseCam.setRotationSpeed(2f);
+//
+//        chaseCam.setMaxVerticalRotation(FastMath.PI / 2);
+//        chaseCam.setMinVerticalRotation(-FastMath.PI);
 
         // Creates a sun (a light) so that the player can see.
         DirectionalLight sun = new DirectionalLight();

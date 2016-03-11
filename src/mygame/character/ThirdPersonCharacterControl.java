@@ -3,14 +3,18 @@ package mygame.character;
 import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
 import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.collision.shapes.CompoundCollisionShape;
-import com.jme3.bullet.control.BetterCharacterControl;
+import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.input.InputManager;
+import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.AnalogListener;
 import com.jme3.input.controls.KeyTrigger;
+import com.jme3.input.controls.MouseAxisTrigger;
+import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
 import com.jme3.scene.Spatial;
+import java.util.Arrays;
 import mygame.debug.DebugLogger;
 import mygame.network.message.PlayerInformationMessage;
 import org.lwjgl.input.Keyboard;
@@ -27,13 +31,13 @@ import org.lwjgl.input.Keyboard;
  *
  * @author Sameer Suri
  */
-public class ThirdPersonCharacterControl extends BetterCharacterControl
+public class ThirdPersonCharacterControl extends RigidBodyControl
                                          implements ActionListener, AnalogListener
 {
 
     // Constants describing the movement of the character
     private int throttle = 0;
-    static final float maxSpeed = 3, rotationSensitivity = 100;
+    static final float maxSpeed = 3, rotationSensitivity = -1000;
 
     // Constants describing the characteristics of the character's hitbox.
     static float _radius = .6f,_height = 3.4f, xOffset = 0, yOffset = .1f, zOffset = 0;
@@ -51,11 +55,11 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
      */
     public ThirdPersonCharacterControl(Spatial spatial, Camera cam)
     {
-        // Calls the BetterCharacterControl constructor, which, among other things
-        // creates a Bullet Physics entity to the player, given a radius, height,
-        // and mass (this would be represented as a capsule shape)
-        super(_radius, _height, _mass);
+        // Calls the rigid body constructor, which sets the mass for the physics engine
+        super(_mass);
 
+        setCollisionShape(generateShape());
+        
         // Stores the camera in an instance variable
         this.cam = cam;
     }
@@ -69,14 +73,14 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
     {
         // Binds keys to their respective actions
 
-//	inputManager.addMapping("RotL", new MouseAxisTrigger(MouseInput.AXIS_X, true));
-//	inputManager.addMapping("RotR", new MouseAxisTrigger(MouseInput.AXIS_X, false));
+	inputManager.addMapping("RotL", new MouseAxisTrigger(MouseInput.AXIS_X, true));
+	inputManager.addMapping("RotR", new MouseAxisTrigger(MouseInput.AXIS_X, false));
 //	inputManager.addMapping("RotU", new MouseAxisTrigger(MouseInput.AXIS_Y, true));
 //	inputManager.addMapping("RotD", new MouseAxisTrigger(MouseInput.AXIS_Y, false));
 
 
-	inputManager.addMapping("RotL", new KeyTrigger(Keyboard.KEY_A));
-	inputManager.addMapping("RotR", new KeyTrigger(Keyboard.KEY_D));
+//	inputManager.addMapping("RotL", new KeyTrigger(Keyboard.KEY_A));
+//	inputManager.addMapping("RotR", new KeyTrigger(Keyboard.KEY_D));
 
         inputManager.addMapping("Throttle+", new KeyTrigger(Keyboard.KEY_W));
         inputManager.addMapping("Throttle-", new KeyTrigger(Keyboard.KEY_S));
@@ -95,10 +99,10 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         switch(action)
         {
             case "RotL":
-                rotL = isPressed;
+//                rotL = isPressed;
                 break;
             case "RotR":
-                rotR = isPressed;
+//                rotR = isPressed;
                 break;
             case "Throttle+":
                 throttle = 100;
@@ -112,9 +116,25 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
     @Override
     public void onAnalog(String action, float value, float tpf)
     {
+        float[] _rotation = this.getPhysicsRotation().toAngles(null);
+        
+        switch(action)
+        {
+            case "RotL":
+                _rotation[1] += value * tpf * rotationSensitivity;
+                break;
+            case "RotR":
+                _rotation[1] -= value * tpf * rotationSensitivity;
+                break;
+        }
+        
+        if(action.startsWith("Rot"))
+        {
+            this.setPhysicsRotation(new Quaternion().fromAngles(_rotation));
+        }
     }
 
-    int i = 0x0 * 0b0000 * 0;
+    int i = 0;
     // Handles movement as the game goes on.
     @Override
     public void update(float tpf)
@@ -122,35 +142,34 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         // Has the superclass take care of physics stuff
         super.update(tpf);
 
-        Vector3f _rotation = this.cam.getRotation().mult(Vector3f.UNIT_XYZ);
-
 //        System.out.printf("Cam rotation is [%f, %f, %f]%n", _rotation.x, _rotation.y, _rotation.z);
 //        System.out.printf("View vector is [%f, %f, %f]%n", viewDirection.x, viewDirection.y, viewDirection.z);
 
-        float[] deltaRotation = new float[]{0, 0, 0};
+        float[] _rot = this.getPhysicsRotation().toAngles(null);
         if(rotL)
         {
-            deltaRotation[2] += rotationSensitivity * tpf;
+            _rot[1] += rotationSensitivity * tpf;
         }
         else if(rotR)
         {
-            deltaRotation[2] += -rotationSensitivity * tpf;
+            _rot[1] += -rotationSensitivity * tpf;
         }
 
-//        System.out.println(this.spatial.getLocalRotation().mult(Vector3f.UNIT_XYZ));
-        this.setViewDirection(this.getViewDirection().add(new Vector3f(deltaRotation[0], deltaRotation[1], deltaRotation[2])));
+//        this.setPhysicsRotation(new Quaternion().fromAngles(_rot));
 
-//        walkDirection
-//        this.setPhysicsRotation(new Quaternion().fromAngles(1, 1, 1));
-
-        DebugLogger.println(this.getViewDirection());
-//        System.out.printf(this.getViewDirection());
-        System.out.printf("Delta Rotation: [%f, %f, %f]%nrotL=%b\trotR=%b%n", deltaRotation[0], deltaRotation[1], deltaRotation[2], rotL, rotR);
+        if(i % 200 == 0)
+        {
+//            DebugLogger.println(this.getViewDirection());
+            DebugLogger.println(cam.getLeft().clone().mult(new Vector3f(1, 0, 1)).normalize().multLocal(maxSpeed));
+            i = 0;
+        }
+//        System.out.printf(this.getVa Rotation: [%f, %f, %f]%nrotL=%b\trotR=%b%niewDirection());
+        System.out.println(Arrays.toString(_rot));
     }
 
     /**
-     * Converts this object into a message to be networked.
-     * @return The message.
+     * Converts this object into a message to be networked 
+    * @return The message.
      */
     public PlayerInformationMessage toMessage()
     {
@@ -159,9 +178,9 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
 
         // Gets the location and rotation data from this object and puts it in the messaeg
         message.location = new float[]
-            {location.x, location.y, location.z};
+            {this.getPhysicsLocation().x, this.getPhysicsLocation().y, this.getPhysicsLocation().z};
         message.rotation = new float[]
-            {rotation.getX(), rotation.getY(), rotation.getZ(), rotation.getW()};
+            {this.getPhysicsRotation().getX(), this.getPhysicsRotation().getY(), getPhysicsRotation().getZ(), getPhysicsRotation().getW()};
 
         // Tells the message to use UDP rather than TCP protocol
         // TCP -> slow, reliable (no packet loss)
@@ -170,13 +189,7 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         // Returns the message
         return message;
     }
-
-    @Override
-    protected CollisionShape getShape()
-    {
-        return generateShape();
-    }
-
+    
     public static CollisionShape generateShape()
     {
         // Generates a collision shape for this.
@@ -187,10 +200,5 @@ public class ThirdPersonCharacterControl extends BetterCharacterControl
         Vector3f addLocation = new Vector3f(xOffset, (_height / 2.0f) + yOffset, zOffset);
         compoundCollisionShape.addChildShape(capsuleCollisionShape, addLocation);
         return compoundCollisionShape;
-    }
-
-    public Vector3f getLocation()
-    {
-        return spatial.getLocalTranslation();
     }
 }
