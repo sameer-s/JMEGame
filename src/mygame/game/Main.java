@@ -3,9 +3,6 @@ package mygame.game;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AppState;
 import com.jme3.font.BitmapFont;
-import com.jme3.input.CameraInput;
-import com.jme3.input.FlyByCamera;
-import com.jme3.input.MouseInput;
 import com.jme3.network.Client;
 import com.jme3.system.AppSettings;
 import mygame.character.NetworkedCharacterControl;
@@ -53,6 +50,11 @@ public class Main extends SimpleApplication
         gp.start();
     }
 
+    public Main()
+    {
+        super(new AppState[] {});
+    }
+
     // Called by the engine in order to start the game.
     @Override
     public void simpleInitApp()
@@ -60,15 +62,10 @@ public class Main extends SimpleApplication
         settings.setUseJoysticks(true);
 
         this.setPauseOnLostFocus(false);
-        // Disables the default "fly" cam, we will use a different one. Keeping it enabled causes GUI bugs.
-//        flyCam.setEnabled(true);
-        
+
         inputManager.setCursorVisible(false);
-          
-        flyCam.setEnabled(false);
-        
-        this.mouseInput.setCursorVisible(false);
-        
+
+
         /*
             This game is implemented through App States.
             The first app state is Init.
@@ -83,10 +80,6 @@ public class Main extends SimpleApplication
         // Starts off with the Init app state.
         currentAppState = new InitAppState();
         stateManager.attach(currentAppState);
-
-        // Disables the default diagnostic text that is useless for a release game
-        setDisplayFps(false);
-        setDisplayStatView(false);
     }
 
     // Cleans up resources, closes the window, and kills the app.

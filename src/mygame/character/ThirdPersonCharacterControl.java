@@ -37,7 +37,7 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
 
     // Constants describing the movement of the character
     private int throttle = 0;
-    static final float maxSpeed = 3, rotationSensitivity = -1000;
+    static final float maxSpeed = 3, rotationSensitivity = -1000, cameraFollowDistance = 10;
 
     // Constants describing the characteristics of the character's hitbox.
     static float _radius = .6f,_height = 3.4f, xOffset = 0, yOffset = .1f, zOffset = 0;
@@ -59,7 +59,7 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
         super(_mass);
 
         setCollisionShape(generateShape());
-        
+
         // Stores the camera in an instance variable
         this.cam = cam;
     }
@@ -117,7 +117,7 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
     public void onAnalog(String action, float value, float tpf)
     {
         float[] _rotation = this.getPhysicsRotation().toAngles(null);
-        
+
         switch(action)
         {
             case "RotL":
@@ -127,14 +127,13 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
                 _rotation[1] -= value * tpf * rotationSensitivity;
                 break;
         }
-        
+
         if(action.startsWith("Rot"))
         {
             this.setPhysicsRotation(new Quaternion().fromAngles(_rotation));
         }
     }
 
-    int i = 0;
     // Handles movement as the game goes on.
     @Override
     public void update(float tpf)
@@ -142,33 +141,17 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
         // Has the superclass take care of physics stuff
         super.update(tpf);
 
-//        System.out.printf("Cam rotation is [%f, %f, %f]%n", _rotation.x, _rotation.y, _rotation.z);
-//        System.out.printf("View vector is [%f, %f, %f]%n", viewDirection.x, viewDirection.y, viewDirection.z);
+        float[] rotationEulers = this.getPhysicsRotation().toAngles(null);
+        Vector3f rotationVector = eulerToVector(new Vector3f(rotationEulers[0], rotationEulers[1], rotationEulers[2]));
+        cam.setLocation(this.getPhysicsLocation().add(rotationVector.normalize().negate().mult(cameraFollowDistance)));
 
-        float[] _rot = this.getPhysicsRotation().toAngles(null);
-        if(rotL)
-        {
-            _rot[1] += rotationSensitivity * tpf;
-        }
-        else if(rotR)
-        {
-            _rot[1] += -rotationSensitivity * tpf;
-        }
+        DebugLogger.printfln("rotation eulers: %s, rotation vector: %s", Arrays.toString(rotationEulers), rotationVector);
 
-//        this.setPhysicsRotation(new Quaternion().fromAngles(_rot));
-
-        if(i % 200 == 0)
-        {
-//            DebugLogger.println(this.getViewDirection());
-            DebugLogger.println(cam.getLeft().clone().mult(new Vector3f(1, 0, 1)).normalize().multLocal(maxSpeed));
-            i = 0;
-        }
-//        System.out.printf(this.getVa Rotation: [%f, %f, %f]%nrotL=%b\trotR=%b%niewDirection());
-        System.out.println(Arrays.toString(_rot));
+        cam.lookAt(this.getPhysicsLocation(), Vector3f.UNIT_Y);
     }
 
     /**
-     * Converts this object into a message to be networked 
+     * Converts this object into a message to be networked
     * @return The message.
      */
     public PlayerInformationMessage toMessage()
@@ -189,7 +172,7 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
         // Returns the message
         return message;
     }
-    
+
     public static CollisionShape generateShape()
     {
         // Generates a collision shape for this.
@@ -200,5 +183,17 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
         Vector3f addLocation = new Vector3f(xOffset, (_height / 2.0f) + yOffset, zOffset);
         compoundCollisionShape.addChildShape(capsuleCollisionShape, addLocation);
         return compoundCollisionShape;
+    }
+
+    private static Vector3f eulerToVector(Vector3f euler)
+    {
+        final float yaw = euler.y, pitch = euler.x;
+
+        Vector3f out = new Vector3f();
+        out.x = (float) (Math.cos(yaw) * Math.cos(pitch));
+        out.y = (float) (Math.sin(pitch));
+        out.z = (float) (Math.sin(yaw) * Math.cos(pitch));
+
+        return out;
     }
 }
