@@ -10,12 +10,18 @@ import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.AnalogListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.input.controls.MouseAxisTrigger;
+import com.jme3.input.controls.MouseButtonTrigger;
+import com.jme3.material.Material;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
+import com.jme3.scene.Geometry;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.shape.Box;
 import java.util.Arrays;
 import mygame.debug.DebugLogger;
+import mygame.game.Main;
 import mygame.network.message.PlayerInformationMessage;
 import org.lwjgl.input.Keyboard;
 
@@ -36,13 +42,19 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
 {
 
     // Constants describing the movement of the character
-    private int throttle = 0;
-    static final float maxSpeed = 3, rotationSensitivity = -1000, cameraFollowDistance = 10;
+    static final float maxSpeed = 3, rotationSensitivity = -1000, cameraFollowDistance = 10, rollSpeed = .05f;
 
     // Constants describing the characteristics of the character's hitbox.
     static float _radius = .6f,_height = 3.4f, xOffset = 0, yOffset = .1f, zOffset = 0;
 
     static float _mass = 0f;
+
+    private int throttle = 0;
+
+    private Main app;
+
+    private Material bulletMat;
+
 
     // The instance of the JME camera class that we use to find out which way the player is looking.
     @SuppressWarnings("FieldMayBeFinal")
@@ -52,8 +64,9 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
      * Constructor for the control.
      * @param spatial The model used, so that the control can find the animations in the model
      * @param cam The camera, so that the control can see where the player is looking
+     * @param app The main game app context this control is in
      */
-    public ThirdPersonCharacterControl(Spatial spatial, Camera cam)
+    public ThirdPersonCharacterControl(Spatial spatial, Camera cam, Main app)
     {
         // Calls the rigid body constructor, which sets the mass for the physics engine
         super(_mass);
@@ -62,6 +75,11 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
 
         // Stores the camera in an instance variable
         this.cam = cam;
+
+        this.app = app;
+
+        bulletMat = new Material(app.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
+        bulletMat.setColor("Color", ColorRGBA.Red);
     }
 
     /**
@@ -75,8 +93,8 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
 
 	inputManager.addMapping("RotL", new MouseAxisTrigger(MouseInput.AXIS_X, true));
 	inputManager.addMapping("RotR", new MouseAxisTrigger(MouseInput.AXIS_X, false));
-//	inputManager.addMapping("RotU", new MouseAxisTrigger(MouseInput.AXIS_Y, true));
-//	inputManager.addMapping("RotD", new MouseAxisTrigger(MouseInput.AXIS_Y, false));
+	inputManager.addMapping("RotU", new MouseAxisTrigger(MouseInput.AXIS_Y, true));
+	inputManager.addMapping("RotD", new MouseAxisTrigger(MouseInput.AXIS_Y, false));
 
 
 //	inputManager.addMapping("RotL", new KeyTrigger(Keyboard.KEY_A));
@@ -85,10 +103,11 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
         inputManager.addMapping("Throttle+", new KeyTrigger(Keyboard.KEY_W));
         inputManager.addMapping("Throttle-", new KeyTrigger(Keyboard.KEY_S));
 
+        inputManager.addMapping("Shoot", new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
         // Adds listeners for the action
         // This allows 'this' object to be notified when one of the above set
         // keys is pressed
-        inputManager.addListener(this, "RotL", "RotR", "RotD", "RotU", "Throttle+", "Throttle-");
+        inputManager.addListener(this, "RotL", "RotR", "RotD", "RotU", "Throttle+", "Throttle-", "Shoot");
     }
 
     private boolean rotL = false, rotR = false;
@@ -98,11 +117,8 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
     {
         switch(action)
         {
-            case "RotL":
-//                rotL = isPressed;
-                break;
-            case "RotR":
-//                rotR = isPressed;
+            case "Shoot":
+                if(isPressed) makeBullet();
                 break;
             case "Throttle+":
                 throttle = 100;
@@ -113,10 +129,17 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
         }
     }
 
+    private float[] _rotation = new float[] {0, 0, 0};
+    private boolean onAnalog_first = true;
+
     @Override
     public void onAnalog(String action, float value, float tpf)
     {
-        float[] _rotation = this.getPhysicsRotation().toAngles(null);
+        if(onAnalog_first)
+        {
+            _rotation = this.getPhysicsRotation().toAngles(null);
+            onAnalog_first = false;
+        }
 
         switch(action)
         {
@@ -126,14 +149,16 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
             case "RotR":
                 _rotation[1] -= value * tpf * rotationSensitivity;
                 break;
-        }
-
-        if(action.startsWith("Rot"))
-        {
-            this.setPhysicsRotation(new Quaternion().fromAngles(_rotation));
+            case "RotU":
+                _rotation[0] -= value * tpf * rotationSensitivity;
+                break;
+            case "RotD":
+                _rotation[0] += value * tpf * rotationSensitivity;
+                break;
         }
     }
 
+    int i = 0;
     // Handles movement as the game goes on.
     @Override
     public void update(float tpf)
@@ -141,11 +166,21 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
         // Has the superclass take care of physics stuff
         super.update(tpf);
 
+//        _rotation[2] += rollSpeed * tpf * FastMath.TWO_PI;
+
+        this.setPhysicsRotation(new Quaternion().fromAngles(_rotation));
+
         float[] rotationEulers = this.getPhysicsRotation().toAngles(null);
         Vector3f rotationVector = eulerToVector(new Vector3f(rotationEulers[0], rotationEulers[1], rotationEulers[2]));
         cam.setLocation(this.getPhysicsLocation().add(rotationVector.normalize().negate().mult(cameraFollowDistance)));
 
-        DebugLogger.printfln("rotation eulers: %s, rotation vector: %s", Arrays.toString(rotationEulers), rotationVector);
+        if(i % 200 == 0)
+        {
+            DebugLogger.printfln("roll: %f, rotation eulers: %s, rotation vector: %s", _rotation[2], Arrays.toString(rotationEulers), rotationVector);
+            i = 1;
+        }
+
+        i++;
 
         cam.lookAt(this.getPhysicsLocation(), Vector3f.UNIT_Y);
     }
@@ -190,10 +225,24 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
         final float yaw = euler.y, pitch = euler.x;
 
         Vector3f out = new Vector3f();
-        out.x = (float) (Math.cos(yaw) * Math.cos(pitch));
-        out.y = (float) (Math.sin(pitch));
-        out.z = (float) (Math.sin(yaw) * Math.cos(pitch));
+        out.x = (float) (Math.sin(yaw));
+//        out.y = (float) -(Math.tan(pitch));
+        out.z = (float) (Math.cos(yaw));
 
         return out;
+    }
+
+    int bulletNum = 0;
+    public void makeBullet()
+    {
+        Geometry bullet = new Geometry("bullet" + bulletNum++, new Box(.2f, .2f, .2f));
+        bullet.setMaterial(bulletMat);
+        bullet.setLocalTranslation(this.getPhysicsLocation());
+        RigidBodyControl bulletControl = new RigidBodyControl(1f);
+
+        app.addSpatial(bullet, bulletControl);
+
+        bulletControl.setLinearVelocity(this.getPhysicsRotation().getRotationColumn(2).mult(25));
+
     }
 }

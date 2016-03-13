@@ -4,12 +4,10 @@ import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.bullet.BulletAppState;
-import com.jme3.input.ChaseCamera;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
-import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
@@ -113,7 +111,7 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         playerModel.scale(.5f);
 
         // Creates our new character controller, passing in a few necessary parameters.
-        this.app.playerController = new ThirdPersonCharacterControl(playerModel, this.app.getCamera());
+        this.app.playerController = new ThirdPersonCharacterControl(playerModel, this.app.getCamera(), this.app);
         this.app.playerController.initKeys(this.app.getInputManager());
 
         // Attaches the control to the player model

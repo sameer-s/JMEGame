@@ -2,8 +2,11 @@ package mygame.game;
 
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AppState;
+import com.jme3.bullet.BulletAppState;
+import com.jme3.bullet.control.PhysicsControl;
 import com.jme3.font.BitmapFont;
 import com.jme3.network.Client;
+import com.jme3.scene.Spatial;
 import com.jme3.system.AppSettings;
 import mygame.character.NetworkedCharacterControl;
 import mygame.character.ThirdPersonCharacterControl;
@@ -158,5 +161,17 @@ public class Main extends SimpleApplication
     public AppSettings getSettings()
     {
         return settings;
+    }
+
+    public void addSpatial(Spatial sp)
+    {
+        rootNode.attachChild(sp);
+    }
+
+    public void addSpatial(Spatial sp, PhysicsControl pc)
+    {
+        addSpatial(sp);
+        sp.addControl(pc);
+        this.getStateManager().getState(BulletAppState.class).getPhysicsSpace().add(pc);
     }
 }
