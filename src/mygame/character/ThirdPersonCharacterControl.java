@@ -104,19 +104,26 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
         inputManager.addMapping("Throttle-", new KeyTrigger(Keyboard.KEY_S));
 
         inputManager.addMapping("Shoot", new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
+        inputManager.addMapping("BeamShoot", new MouseButtonTrigger(MouseInput.BUTTON_RIGHT));
+
         // Adds listeners for the action
         // This allows 'this' object to be notified when one of the above set
         // keys is pressed
-        inputManager.addListener(this, "RotL", "RotR", "RotD", "RotU", "Throttle+", "Throttle-", "Shoot");
+        inputManager.addListener(this, "RotL", "RotR", "RotD", "RotU", "Throttle+", "Throttle-", "Shoot", "BeamShoot");
     }
 
     private boolean rotL = false, rotR = false;
+
+    private boolean beamShoot = false;
     // Notifies the character controller when a button event occurs.
     @Override
     public void onAction(String action, boolean isPressed, float tpf)
     {
         switch(action)
         {
+            case "BeamShoot":
+                beamShoot = isPressed;
+                break;
             case "Shoot":
                 if(isPressed) makeBullet();
                 break;
@@ -166,12 +173,18 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
         // Has the superclass take care of physics stuff
         super.update(tpf);
 
+        if(beamShoot)
+        {
+            makeBullet();
+        }
+
 //        _rotation[2] += rollSpeed * tpf * FastMath.TWO_PI;
 
         this.setPhysicsRotation(new Quaternion().fromAngles(_rotation));
 
         float[] rotationEulers = this.getPhysicsRotation().toAngles(null);
         Vector3f rotationVector = eulerToVector(new Vector3f(rotationEulers[0], rotationEulers[1], rotationEulers[2]));
+//        Vector3f rotationVector = this.getPhysicsRotation().getRotationColumn(2);
         cam.setLocation(this.getPhysicsLocation().add(rotationVector.normalize().negate().mult(cameraFollowDistance)));
 
         if(i % 200 == 0)
@@ -225,9 +238,13 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
         final float yaw = euler.y, pitch = euler.x;
 
         Vector3f out = new Vector3f();
-        out.x = (float) (Math.sin(yaw));
-//        out.y = (float) -(Math.tan(pitch));
-        out.z = (float) (Math.cos(yaw));
+        out.x = (float) Math.sin(yaw);
+        out.y = (float) Math.tan(pitch);
+        out.z = (float) Math.cos(yaw);
+
+//        out.x = (float) (Math.cos(pitch) * Math.cos(yaw));
+//        out.y = (float) (Math.sin(pitch));
+//        out.z = (float) (Math.cos(pitch) * Math.sin(yaw));
 
         return out;
     }
@@ -236,9 +253,11 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
     public void makeBullet()
     {
         Geometry bullet = new Geometry("bullet" + bulletNum++, new Box(.2f, .2f, .2f));
+//        bulletMat.setColor("Color", ColorRGBA.randomColor());
         bullet.setMaterial(bulletMat);
         bullet.setLocalTranslation(this.getPhysicsLocation());
-        RigidBodyControl bulletControl = new RigidBodyControl(1f);
+        BulletControl bulletControl = new BulletControl(1f, 5f);
+//        RigidBodyControl bulletControl = new RigidBodyControl(1f);
 
         app.addSpatial(bullet, bulletControl);
 
