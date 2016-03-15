@@ -13,6 +13,7 @@ import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
@@ -53,9 +54,6 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
 
     private Main app;
 
-    private Material bulletMat;
-
-
     // The instance of the JME camera class that we use to find out which way the player is looking.
     @SuppressWarnings("FieldMayBeFinal")
     protected Camera cam;
@@ -77,9 +75,6 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
         this.cam = cam;
 
         this.app = app;
-
-        bulletMat = new Material(app.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
-        bulletMat.setColor("Color", ColorRGBA.Red);
     }
 
     /**
@@ -111,8 +106,6 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
         // keys is pressed
         inputManager.addListener(this, "RotL", "RotR", "RotD", "RotU", "Throttle+", "Throttle-", "Shoot", "BeamShoot");
     }
-
-    private boolean rotL = false, rotR = false;
 
     private boolean beamShoot = false;
     // Notifies the character controller when a button event occurs.
@@ -239,7 +232,7 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
 
         Vector3f out = new Vector3f();
         out.x = (float) Math.sin(yaw);
-        out.y = (float) Math.tan(pitch);
+        out.y = (float) -Math.tan(pitch);
         out.z = (float) Math.cos(yaw);
 
 //        out.x = (float) (Math.cos(pitch) * Math.cos(yaw));
@@ -253,15 +246,19 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
     public void makeBullet()
     {
         Geometry bullet = new Geometry("bullet" + bulletNum++, new Box(.2f, .2f, .2f));
-//        bulletMat.setColor("Color", ColorRGBA.randomColor());
-        bullet.setMaterial(bulletMat);
         bullet.setLocalTranslation(this.getPhysicsLocation());
+        
+        Material mat = new Material(app.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
+        mat.setColor("Color", ColorRGBA.randomColor());
+        
+        bullet.setMaterial(mat);
+        
         BulletControl bulletControl = new BulletControl(1f, 5f);
 //        RigidBodyControl bulletControl = new RigidBodyControl(1f);
+        
 
         app.addSpatial(bullet, bulletControl);
 
         bulletControl.setLinearVelocity(this.getPhysicsRotation().getRotationColumn(2).mult(25));
-
     }
 }
