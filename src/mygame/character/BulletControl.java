@@ -36,7 +36,6 @@ public class BulletControl extends RigidBodyControl
     {
         super.update(tpf);
 
-        System.out.println("nitipuhalam " + ttl);
         ttl -= tpf;
 
         if(ttl <= 0)
