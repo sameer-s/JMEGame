@@ -13,20 +13,12 @@ import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
-import com.jme3.math.FastMath;
-import static com.jme3.math.FastMath.HALF_PI;
-import static com.jme3.math.FastMath.PI;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
-import static java.lang.Math.cos;
-import static java.lang.Math.sin;
-import static java.lang.Math.tan;
-import java.util.Arrays;
-import mygame.debug.DebugLogger;
 import mygame.game.Main;
 import mygame.network.message.PlayerInformationMessage;
 import org.lwjgl.input.Keyboard;
@@ -162,8 +154,7 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
                 break;
         }
     }
-
-    int i = 0;
+    
     // Handles movement as the game goes on.
     @Override
     public void update(float tpf)
@@ -176,41 +167,27 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
             makeBullet();
         }
 
-//        _rotation[2] += rollSpeed * tpf * FastMath.TWO_PI;
-
         this.setPhysicsRotation(new Quaternion().fromAngles(_rotation));
 
-        float[] rotationEulers = this.getPhysicsRotation().toAngles(null);
-//        Vector3f rotationVector = eulerToVector(new Vector3f(rotationEulers[0], rotationEulers[1], rotationEulers[2]));
         Vector3f rotationVector = this.getPhysicsRotation().getRotationColumn(2);
-                
+        
         cam.setLocation(this.getPhysicsLocation().add(rotationVector.normalize().negate().mult(cameraFollowDistance)));
+        
+        cam.lookAt(this.getPhysicsLocation(), Vector3f.UNIT_Y);
         
         if(rotationVector.z < 0)
         {
-          System.out.println("FLIP");
-             
-          float[] cameraRotation = cam.getRotation().toAngles(null);
+            float[] cameraRotation = cam.getRotation().toAngles(null);
             
-          cameraRotation[2] = -cameraRotation[2];
-          
-          cam.setRotation(new Quaternion().fromAngles(cameraRotation));
-        }
-        
-        if(i % 200 == 0)
-        {
-            DebugLogger.printfln("roll: %f, rotation eulers: %s, rotation vector: %s", _rotation[2], Arrays.toString(rotationEulers), rotationVector);
-            i = 1;
-        }
+            cameraRotation[2] = -cameraRotation[2];
 
-        i++;
-
-        cam.lookAt(this.getPhysicsLocation(), Vector3f.UNIT_Y);
-    }
+            cam.setRotation(new Quaternion().fromAngles(cameraRotation));
+        }
+     }
 
     /**
      * Converts this object into a message to be networked
-    * @return The message.
+     * @return The message.
      */
     public PlayerInformationMessage toMessage()
     {
@@ -241,31 +218,6 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
         Vector3f addLocation = new Vector3f(xOffset, (_height / 2.0f) + yOffset, zOffset);
         compoundCollisionShape.addChildShape(capsuleCollisionShape, addLocation);
         return compoundCollisionShape;
-    }
-
-    private static Vector3f eulerToVector(Vector3f euler)
-    {
-        final float yaw = euler.y, pitch = euler.x;
-
-        Vector3f out = new Vector3f();
-        
-        out.x = (float) sin(yaw);
-        out.y = (float) -tan(pitch);
-        out.z = (float) cos(yaw);
-        
-//        out.x = (float) (sin(yaw));
-//        out.y = (float) (sin(pitch) * cos(yaw));
-//        out.z = (float) (cos(pitch) * cos(yaw));
-        
-        //out.x = (float) Math.sin(yaw);
-        //out.y = (float) -Math.tan(pitch);
-        //out.z = (float) Math.cos(yaw);
-
-//        out.x = (float) (Math.cos(pitch) * Math.cos(yaw));
-//        out.y = (float) (Math.sin(pitch));
-//        out.z = (float) (Math.cos(pitch) * Math.sin(yaw));
-
-        return out;
     }
 
     int bulletNum = 0;

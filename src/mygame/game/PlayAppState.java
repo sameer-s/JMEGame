@@ -4,6 +4,7 @@ import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.bullet.BulletAppState;
+import com.jme3.input.ChaseCamera;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
@@ -126,14 +127,14 @@ public class PlayAppState extends AbstractAppState implements ActionListener
 
 //        ChaseCamera chaseCam = new ChaseCamera(this.app.getCamera(), playerModel, this.app.getInputManager());
 //        // By default, you have to push down a mouse button to rotate the chase cam. This disables that.
-//        chaseCam.setDragToRotate(false);
+////        chaseCam.setDragToRotate(false);
 //        // By default, it looks at the player model's (0,0,0), which is at its feet. This looks a bit higher.
 //        chaseCam.setLookAtOffset(new Vector3f(0, 1f, 0));
 //        // This keeps the camera a bit closer to the player than the default. This can be changed by the scroll wheel (on the mouse).
 //        chaseCam.setDefaultDistance(7f);
 //        // Speeds up the rotation, as the default is quite slow.
 //        chaseCam.setRotationSpeed(2f);
-//
+//        
 //        chaseCam.setMaxVerticalRotation(FastMath.PI / 2);
 //        chaseCam.setMinVerticalRotation(-FastMath.PI);
 
@@ -151,6 +152,14 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         // These are initialized in initKeys of ThirdPersonCharacterControl
         // The rest of them are also handled there
         this.app.getInputManager().addListener(this, "Debug");
+        
+        Geometry geom = new Geometry("RedBox", new Box(1, 1, 1));
+        Material boxMat = new Material(app.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
+        boxMat.setColor("Color", ColorRGBA.Red);
+        geom.setLocalTranslation(5, 5, 5);
+        geom.setMaterial(boxMat);
+        
+        this.app.getRootNode().attachChild(geom);
     }
 
 
