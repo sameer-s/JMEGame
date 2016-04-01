@@ -4,11 +4,13 @@ import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.bullet.BulletAppState;
+import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.input.ChaseCamera;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
@@ -20,6 +22,7 @@ import java.util.Arrays;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import javax.swing.JOptionPane;
+import mygame.character.RotationLockedChaseCamera;
 import mygame.character.ThirdPersonCharacterControl;
 import mygame.network.message.PlayerInformationMessage;
 
@@ -125,18 +128,17 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         bulletAppState.getPhysicsSpace().add(playerModel);
 
 
-//        ChaseCamera chaseCam = new ChaseCamera(this.app.getCamera(), playerModel, this.app.getInputManager());
-//        // By default, you have to push down a mouse button to rotate the chase cam. This disables that.
-////        chaseCam.setDragToRotate(false);
-//        // By default, it looks at the player model's (0,0,0), which is at its feet. This looks a bit higher.
-//        chaseCam.setLookAtOffset(new Vector3f(0, 1f, 0));
-//        // This keeps the camera a bit closer to the player than the default. This can be changed by the scroll wheel (on the mouse).
-//        chaseCam.setDefaultDistance(7f);
-//        // Speeds up the rotation, as the default is quite slow.
-//        chaseCam.setRotationSpeed(2f);
-//        
-//        chaseCam.setMaxVerticalRotation(FastMath.PI / 2);
-//        chaseCam.setMinVerticalRotation(-FastMath.PI);
+        ChaseCamera chaseCam = new RotationLockedChaseCamera(this.app.getCamera(), playerModel, this.app.getInputManager());
+        // By default, you have to push down a mouse button to rotate the chase cam. This disables that.
+        chaseCam.setDragToRotate(false);
+        // By default, it looks at the player model's (0,0,0), which is at its feet. This looks a bit higher.
+        chaseCam.setLookAtOffset(new Vector3f(0, 1f, 0));
+        // This keeps the camera a bit closer to the player than the default. This can be changed by the scroll wheel (on the mouse).
+        chaseCam.setDefaultDistance(7f);
+        // Speeds up the rotation, as the default is quite slow.
+        chaseCam.setRotationSpeed(2f);
+        
+        chaseCam.setMinVerticalRotation(-(7 * FastMath.PI) / 16);
 
         // Creates a sun (a light) so that the player can see.
         DirectionalLight sun = new DirectionalLight();
@@ -158,6 +160,7 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         boxMat.setColor("Color", ColorRGBA.Red);
         geom.setLocalTranslation(5, 5, 5);
         geom.setMaterial(boxMat);
+        geom.addControl(new RigidBodyControl(1f));
         
         this.app.getRootNode().attachChild(geom);
     }

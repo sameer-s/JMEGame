@@ -163,15 +163,13 @@ public class Main extends SimpleApplication
         return settings;
     }
 
-    public void addSpatial(Spatial sp)
+    public void addSpatial(Spatial sp, PhysicsControl... pcs)
     {
         rootNode.attachChild(sp);
-    }
-
-    public void addSpatial(Spatial sp, PhysicsControl pc)
-    {
-        addSpatial(sp);
-        sp.addControl(pc);
-        this.getStateManager().getState(BulletAppState.class).getPhysicsSpace().add(pc);
+        for(PhysicsControl pc : pcs)
+        {
+            sp.addControl(pc);
+            this.getStateManager().getState(BulletAppState.class).getPhysicsSpace().add(pc);
+        }
     }
 }

@@ -1,8 +1,10 @@
 package mygame.character;
 
+import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
 import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.collision.shapes.CompoundCollisionShape;
+import com.jme3.bullet.control.GhostControl;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.input.InputManager;
 import com.jme3.input.MouseInput;
@@ -167,22 +169,22 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
             makeBullet();
         }
 
-        this.setPhysicsRotation(new Quaternion().fromAngles(_rotation));
-
-        Vector3f rotationVector = this.getPhysicsRotation().getRotationColumn(2);
-        
-        cam.setLocation(this.getPhysicsLocation().add(rotationVector.normalize().negate().mult(cameraFollowDistance)));
-        
-        cam.lookAt(this.getPhysicsLocation(), Vector3f.UNIT_Y);
-        
-        if(rotationVector.z < 0)
-        {
-            float[] cameraRotation = cam.getRotation().toAngles(null);
-            
-            cameraRotation[2] = -cameraRotation[2];
-
-            cam.setRotation(new Quaternion().fromAngles(cameraRotation));
-        }
+//        this.setPhysicsRotation(new Quaternion().fromAngles(_rotation));
+//
+//        Vector3f rotationVector = this.getPhysicsRotation().getRotationColumn(2);
+//        
+//        cam.setLocation(this.getPhysicsLocation().add(rotationVector.normalize().negate().mult(cameraFollowDistance)));
+//        
+//        cam.lookAt(this.getPhysicsLocation(), Vector3f.UNIT_Y);
+//        
+//        if(rotationVector.z < 0)
+//        {
+//            float[] cameraRotation = cam.getRotation().toAngles(null);
+//            
+//            cameraRotation[2] = -cameraRotation[2];
+//
+//            cam.setRotation(new Quaternion().fromAngles(cameraRotation));
+//        }
      }
 
     /**
@@ -231,12 +233,11 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
         
         bullet.setMaterial(mat);
         
-        BulletControl bulletControl = new BulletControl(1f, 5f);
-//        RigidBodyControl bulletControl = new RigidBodyControl(1f);
+        BulletControl.RigidBody bulletRigidBodyControl = new BulletControl.RigidBody(1f, 5f);
+        BulletControl.Ghost bulletGhostControl = new BulletControl.Ghost();
         
+        app.addSpatial(bullet, bulletRigidBodyControl, bulletGhostControl);
 
-        app.addSpatial(bullet, bulletControl);
-
-        bulletControl.setLinearVelocity(this.getPhysicsRotation().getRotationColumn(2).mult(25));
+        bulletRigidBodyControl.setLinearVelocity(this.getPhysicsRotation().getRotationColumn(2).mult(25));
     }
 }
