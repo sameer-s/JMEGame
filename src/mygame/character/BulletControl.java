@@ -1,10 +1,13 @@
 package mygame.character;
 
+import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.PhysicsTickListener;
-import com.jme3.bullet.collision.PhysicsCollisionObject;
+import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.control.GhostControl;
 import com.jme3.bullet.control.RigidBodyControl;
+import mygame.character.enemy.DestructibleGameObject;
+import mygame.game.Main;
 
 /**
  *
@@ -47,12 +50,22 @@ public class BulletControl
             if(ttl <= 0)
             {
                 spatial.removeFromParent();
+                spatial.removeControl(this);
             }
         }
     }
-    
+
     public static class Ghost extends GhostControl implements PhysicsTickListener
     {
+        private Main app;
+
+        public Ghost(CollisionShape shape, Main app)
+        {
+            super(shape);
+            this.app = app;
+            app.addPhysicsTickListener(this); // FIXME leaking this in constructor
+        }
+
         @Override
         public void prePhysicsTick(PhysicsSpace space, float tpf)
         {
@@ -61,9 +74,28 @@ public class BulletControl
         @Override
         public void physicsTick(PhysicsSpace space, float tpf)
         {
-            for(PhysicsCollisionObject obj : this.getOverlappingObjects())
+            this.getOverlappingObjects().stream()
+                    .filter(obj -> obj instanceof DestructibleGameObject)
+                    .map(obj -> (DestructibleGameObject) obj)
+                    .forEach(DestructibleGameObject::destroyGameObject);
+
+            if(this.getOverlappingObjects().stream().anyMatch(obj -> obj instanceof DestructibleGameObject))
             {
-                System.out.println(obj.toString());
+                app.enqueue(() -> {
+                    try
+                    {
+                        spatial.removeFromParent();
+                        app.getStateManager().getState(BulletAppState.class).getPhysicsSpace().remove(spatial);
+
+                        spatial.removeControl(BulletControl.RigidBody.class);
+                        spatial.removeControl(BulletControl.Ghost.class);
+
+                        spatial = null;
+                    }
+                    catch(NullPointerException npe) {}
+
+                    return 0;
+                });
             }
         }
     }

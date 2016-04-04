@@ -1,12 +1,14 @@
 package mygame.game;
 
 import com.jme3.app.Application;
+import com.jme3.app.StatsAppState;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.bullet.BulletAppState;
-import com.jme3.bullet.control.RigidBodyControl;
+import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.input.ChaseCamera;
 import com.jme3.input.controls.ActionListener;
+import com.jme3.input.controls.KeyTrigger;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
@@ -19,12 +21,15 @@ import com.jme3.scene.shape.Box;
 import com.jme3.util.SkyFactory;
 import com.jme3.util.SkyFactory.EnvMapType;
 import java.util.Arrays;
+import java.util.Random;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import javax.swing.JOptionPane;
 import mygame.character.RotationLockedChaseCamera;
 import mygame.character.ThirdPersonCharacterControl;
+import mygame.character.enemy.DestructibleGhost;
 import mygame.network.message.PlayerInformationMessage;
+import org.lwjgl.input.Keyboard;
 
 /**
  * The app state where the player is interacting with the world and other player.
@@ -36,7 +41,11 @@ public class PlayAppState extends AbstractAppState implements ActionListener
     // Holds a reference to the application
     private Main app;
 
-    private static final String SHIP_MODEL = "Models/ship/v2.j3o";
+    private static final String SHIP_MODEL = "Models/ship/SpaceShip.j3o";
+
+    ChaseCamera chaseCam;
+
+    private StatsAppState stats;
 
     // When the app state first starts
     @Override
@@ -49,6 +58,8 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         this.app = (Main) app;
 
         this.app.getViewPort().setBackgroundColor(ColorRGBA.Black);
+
+        stats = new StatsAppState();
 
         // Sets up the Bullet Physics Engine
         BulletAppState bulletAppState = new BulletAppState();
@@ -106,10 +117,12 @@ public class PlayAppState extends AbstractAppState implements ActionListener
             else if(sp instanceof Geometry)
             {
                 Material geomMat = ((Geometry) sp).getMaterial();
-                geomMat.setBoolean("UseVertexColor", true);
+                geomMat.setBoolean("VertexColor", true);
                 ((Geometry) sp).setMaterial(geomMat);
             }
         };
+
+        enableVertexColors.function.accept(playerModel);
 
         // Makes some adjustment so it works properly
         playerModel.scale(.5f);
@@ -128,7 +141,7 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         bulletAppState.getPhysicsSpace().add(playerModel);
 
 
-        ChaseCamera chaseCam = new RotationLockedChaseCamera(this.app.getCamera(), playerModel, this.app.getInputManager());
+        chaseCam = new RotationLockedChaseCamera(this.app.getCamera(), playerModel, this.app.getInputManager());
         // By default, you have to push down a mouse button to rotate the chase cam. This disables that.
         chaseCam.setDragToRotate(false);
         // By default, it looks at the player model's (0,0,0), which is at its feet. This looks a bit higher.
@@ -137,7 +150,7 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         chaseCam.setDefaultDistance(7f);
         // Speeds up the rotation, as the default is quite slow.
         chaseCam.setRotationSpeed(2f);
-        
+
         chaseCam.setMinVerticalRotation(-(7 * FastMath.PI) / 16);
 
         // Creates a sun (a light) so that the player can see.
@@ -153,18 +166,23 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         // Has this listen to certain keypresses during the game.
         // These are initialized in initKeys of ThirdPersonCharacterControl
         // The rest of them are also handled there
-        this.app.getInputManager().addListener(this, "Debug");
-        
-        Geometry geom = new Geometry("RedBox", new Box(1, 1, 1));
-        Material boxMat = new Material(app.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
-        boxMat.setColor("Color", ColorRGBA.Red);
-        geom.setLocalTranslation(5, 5, 5);
-        geom.setMaterial(boxMat);
-        geom.addControl(new RigidBodyControl(1f));
-        
-        this.app.getRootNode().attachChild(geom);
-    }
+        this.app.getInputManager().addMapping("Debug", new KeyTrigger(Keyboard.KEY_B));
+        this.app.getInputManager().addMapping("MouseCapture", new KeyTrigger(Keyboard.KEY_X));
+        this.app.getInputManager().addListener(this, "Debug", "MouseCapture");
 
+        for(int i = 0; i < 25; i++)
+        {
+            Geometry geom = new Geometry("RedBox", new Box(1f, 1f, 1f));
+            Material boxMat = new Material(app.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
+            boxMat.setColor("Color", ColorRGBA.Red);
+            geom.setLocalTranslation(i, i % 2 == 0 ? 25 - i : i, new Random().nextInt(25));
+            geom.setMaterial(boxMat);
+            geom.addControl(new DestructibleGhost(new BoxCollisionShape(new Vector3f(1f, 1f, 1f)), this.app));
+
+            this.app.getRootNode().attachChild(geom);
+            this.app.getStateManager().getState(BulletAppState.class).getPhysicsSpace().add(geom);
+        }
+    }
 
     // Called in a loop by the engine to allow the game to make changes.
     @Override
@@ -209,6 +227,21 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         {
             // Enable debug mode for the physics engine (show colliders)
             app.getStateManager().getState(BulletAppState.class).setDebugEnabled(!app.getStateManager().getState(BulletAppState.class).isDebugEnabled());
+            if(app.getStateManager().hasState(stats))
+            {
+                app.getStateManager().detach(stats);
+            }
+            else
+            {
+                app.getStateManager().attach(stats);
+            }
+        }
+        else if(name.equals("MouseCapture") && isPressed)
+        {
+            if(chaseCam != null)
+            {
+                chaseCam.setDragToRotate(!chaseCam.isDragToRotate());
+            }
         }
     }
 
