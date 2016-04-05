@@ -52,28 +52,30 @@ public class NetworkedCharacterControl extends RigidBodyControl
     {
         targetLocation = new Vector3f(m.location[0], m.location[1], m.location[2]);
 
-        if(firstUpdate == true)
-        {
-            currentLocation = new Vector3f(targetLocation);
-            firstUpdate = false;
-        }
-        else
-        {
-            final float distance = currentLocation.distance(targetLocation);
-            if(distance != 0)
-            {
-                final Vector3f movement = targetLocation.subtract(currentLocation);
-                final Vector3f adjusted = movement.mult((tpf * m.currentSpeed) / distance);
+//        if(firstUpdate == true)
+//        {
+//            currentLocation = new Vector3f(targetLocation);
+//            firstUpdate = false;
+//        }
+//        else
+//        {
+//            final float distance = currentLocation.distance(targetLocation);
+//            if(distance != 0)
+//            {
+//                final Vector3f movement = targetLocation.subtract(currentLocation);
+//                final Vector3f adjusted = movement.mult((tpf * m.currentSpeed) / distance);
+//
+//                currentLocation = adjusted.length() > movement.length() ? movement.add(currentLocation) : adjusted.add(currentLocation);
+//            }
+//        }
 
-                currentLocation = adjusted.length() > movement.length() ? movement.add(currentLocation) : adjusted.add(currentLocation);
-            }
-        }
-
+        currentLocation = targetLocation;
+        
         // Try this one if the bottom one doesnt work
-         this.setPhysicsLocation(currentLocation);
+//        this.setPhysicsLocation(currentLocation);
 
         System.out.println(currentLocation);
-//        this.spatial.setLocalTranslation(currentLocation);
+        this.spatial.setLocalTranslation(currentLocation);
     }
 
     private Quaternion currentRotation;
