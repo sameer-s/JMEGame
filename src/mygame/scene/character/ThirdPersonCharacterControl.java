@@ -1,4 +1,4 @@
-package mygame.character;
+package mygame.scene.character;
 
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
@@ -46,13 +46,9 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
     // Constants describing the characteristics of the character's hitbox.
     static float _radius = .6f,_height = 3.4f, xOffset = 0, yOffset = .1f, zOffset = 0;
 
-    static float _mass = 0f;
-
     private float roll = 0;
 
     private int throttle = 0;
-
-    private Main app;
 
     // The instance of the JME camera class that we use to find out which way the player is looking.
     @SuppressWarnings("FieldMayBeFinal")
@@ -62,19 +58,16 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
      * Constructor for the control.
      * @param spatial The model used, so that the control can find the animations in the model
      * @param cam The camera, so that the control can see where the player is looking
-     * @param app The main game app context this control is in
      */
-    public ThirdPersonCharacterControl(Spatial spatial, Camera cam, Main app)
+    public ThirdPersonCharacterControl(Spatial spatial, Camera cam)
     {
         // Calls the rigid body constructor, which sets the mass for the physics engine
-        super(_mass);
+        super(0f); // mass of 0 = do not handle gravity stuff
 
         setCollisionShape(generateShape());
 
         // Stores the camera in an instance variable
         this.cam = cam;
-
-        this.app = app;
     }
 
     /**
@@ -94,7 +87,7 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
         inputManager.addMapping("Throttle+", new KeyTrigger(Keyboard.KEY_W));
         inputManager.addMapping("Throttle-", new KeyTrigger(Keyboard.KEY_S));
 
-        inputManager.addMapping("Shoot", new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
+        inputManager.addMapping("Shoot", new MouseButtonTrigger(MouseInput.BUTTON_LEFT), new KeyTrigger(Keyboard.KEY_SPACE));
 
         // Adds listeners for the action
         // This allows 'this' object to be notified when one of the above set
@@ -181,6 +174,7 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
             {this.getPhysicsLocation().x, this.getPhysicsLocation().y, this.getPhysicsLocation().z};
         message.rotation = new float[]
             {this.getPhysicsRotation().getX(), this.getPhysicsRotation().getY(), getPhysicsRotation().getZ(), getPhysicsRotation().getW()};
+        message.currentSpeed = (throttle * maxSpeed) / 100f;
 
         // Tells the message to use UDP rather than TCP protocol
         // TCP -> slow, reliable (no packet loss)
@@ -205,19 +199,22 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
     int bulletNum = 0;
     public void makeBullet()
     {
-        Geometry bullet = new Geometry("bullet" + bulletNum++, new Box(.2f, .2f, .2f));
-        bullet.setLocalTranslation(this.getPhysicsLocation());
+        Vector3f size = new Vector3f(.1f, .05f, .4f);
 
-        Material mat = new Material(app.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
-        mat.setColor("Color", ColorRGBA.randomColor());
+        Geometry bullet = new Geometry("bullet" + bulletNum++, new Box(size.x, size.y, size.z));
+        bullet.setLocalTranslation(this.getPhysicsLocation().add(0, .75f, 0));
+
+        Material mat = new Material(Main.instance.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
+        mat.setColor("Color", ColorRGBA.Red);
 
         bullet.setMaterial(mat);
 
-        BulletControl.RigidBody bulletRigidBodyControl = new BulletControl.RigidBody(1f, 5f);
-        BulletControl.Ghost bulletGhostControl = new BulletControl.Ghost(new BoxCollisionShape(new Vector3f(.2f, .2f, .2f)), app);
+        BulletControl bulletControl = new BulletControl(new BoxCollisionShape(size),
+                this.getPhysicsRotation().getRotationColumn(2).normalize().mult(0.006f + (((throttle > 0 ? throttle : 0) * maxSpeed ) / 100f)),
+                5f);
 
-        app.addSpatial(bullet, bulletRigidBodyControl, bulletGhostControl);
+        bullet.setLocalRotation(this.getPhysicsRotation());
 
-        bulletRigidBodyControl.setLinearVelocity(this.getPhysicsRotation().getRotationColumn(2).mult(10 * (throttle < 1 ? 1 : throttle)));
+        Main.instance.addSpatial(bullet, bulletControl);
     }
 }

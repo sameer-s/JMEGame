@@ -9,10 +9,10 @@ import com.jme3.font.BitmapFont;
 import com.jme3.network.Client;
 import com.jme3.scene.Spatial;
 import com.jme3.system.AppSettings;
-import mygame.character.NetworkedCharacterControl;
-import mygame.character.ThirdPersonCharacterControl;
 import mygame.debug.DebugLogger;
 import mygame.network.ClientMessageListener;
+import mygame.scene.character.NetworkedCharacterControl;
+import mygame.scene.character.ThirdPersonCharacterControl;
 
 /**
  * The main class for the client application. It has a number of purposes:
@@ -27,6 +27,8 @@ import mygame.network.ClientMessageListener;
 public class Main extends SimpleApplication
 {
     /* Game stuff: */
+
+    public static Main instance;
 
     // The player controller for the player controlled by THIS client.
     ThirdPersonCharacterControl playerController;
@@ -51,6 +53,7 @@ public class Main extends SimpleApplication
     {
         // Creates a new instance of our game and starts it.
         Main gp = new Main();
+        instance = gp;
         gp.start();
     }
 
@@ -98,6 +101,9 @@ public class Main extends SimpleApplication
 
         // Has the superclass finish cleanup
         super.destroy();
+
+        // Kills the JVM
+        System.exit(0);
     }
 
     // Called by an app state when it is finished.
@@ -174,11 +180,37 @@ public class Main extends SimpleApplication
         }
     }
 
-    public void addPhysicsTickListener(PhysicsTickListener... listeners)
+    public void addPhysicsTickListener(PhysicsTickListener... tickListeners)
     {
-        for(PhysicsTickListener listener : listeners)
+        for(PhysicsTickListener tickListener : tickListeners)
         {
-           this.getStateManager().getState(BulletAppState.class).getPhysicsSpace().addTickListener(listener);
+           this.getStateManager().getState(BulletAppState.class).getPhysicsSpace().addTickListener(tickListener);
         }
+    }
+
+    public void removeSpatial(final Spatial spatial)
+    {
+        enqueue(() -> {
+            try
+            {
+                spatial.removeFromParent();
+                getStateManager().getState(BulletAppState.class).getPhysicsSpace().remove(spatial);
+
+                while(spatial.getNumControls() > 0)
+                {
+                    spatial.removeControl(spatial.getControl(0));
+                }
+
+                nullifySpatial(spatial);
+            }
+            catch(NullPointerException npe) {}
+
+            return 0;
+        });
+    }
+
+    private void nullifySpatial(Spatial spatial)
+    {
+        spatial = null;
     }
 }

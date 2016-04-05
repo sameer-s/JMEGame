@@ -2,6 +2,7 @@ package mygame.network;
 
 import com.jme3.app.state.AppState;
 import com.jme3.network.Client;
+import com.jme3.network.ErrorListener;
 import com.jme3.network.Message;
 import com.jme3.network.MessageListener;
 import mygame.game.InitAppState;
@@ -16,7 +17,7 @@ import mygame.network.message.PlayerInformationMessage;
  * Note that this is the client listener, the server listener is part of the server main file.
  * @author Sameer Suri
  */
-public class ClientMessageListener implements MessageListener<Client>
+public class ClientMessageListener implements MessageListener<Client>, ErrorListener
 {
     // Holds a reference to the current app state, which provides context to the message
     private AppState appState;
@@ -68,5 +69,11 @@ public class ClientMessageListener implements MessageListener<Client>
             // Update the current location of the player in the Play app state
             ((PlayAppState) appState).updateOpponentLocation((PlayerInformationMessage) m);
         }
+    }
+
+    @Override
+    public void handleError(Object source, Throwable t)
+    {
+        System.out.printf("Error thrown from object %s. Message: %s%n.", source, t.getLocalizedMessage());
     }
 }

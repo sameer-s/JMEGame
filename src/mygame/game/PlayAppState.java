@@ -20,15 +20,14 @@ import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
 import com.jme3.util.SkyFactory;
 import com.jme3.util.SkyFactory.EnvMapType;
-import java.util.Arrays;
 import java.util.Random;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
-import javax.swing.JOptionPane;
-import mygame.character.RotationLockedChaseCamera;
-import mygame.character.ThirdPersonCharacterControl;
-import mygame.character.enemy.DestructibleGhost;
+import mygame.debug.DebugLogger;
 import mygame.network.message.PlayerInformationMessage;
+import mygame.scene.DestructibleGhost;
+import mygame.scene.character.NetworkedCharacterControl;
+import mygame.scene.character.RotationLockedChaseCamera;
+import mygame.scene.character.ThirdPersonCharacterControl;
 import org.lwjgl.input.Keyboard;
 
 /**
@@ -38,9 +37,6 @@ import org.lwjgl.input.Keyboard;
  */
 public class PlayAppState extends AbstractAppState implements ActionListener
 {
-    // Holds a reference to the application
-    private Main app;
-
     private static final String SHIP_MODEL = "Models/ship/SpaceShip.j3o";
 
     ChaseCamera chaseCam;
@@ -54,10 +50,7 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         // Has the super class take care of some stuff
         super.initialize(stateManager, app);
 
-        // Casts the app to our Main type and stores it for later use
-        this.app = (Main) app;
-
-        this.app.getViewPort().setBackgroundColor(ColorRGBA.Black);
+        Main.instance.getViewPort().setBackgroundColor(ColorRGBA.Black);
 
         stats = new StatsAppState();
 
@@ -67,44 +60,12 @@ public class PlayAppState extends AbstractAppState implements ActionListener
 
         bulletAppState.getPhysicsSpace().setGravity(Vector3f.ZERO);
 
-        Geometry[] cubes = new Geometry[] {
-//          new Geometry("cube1"),
-//          new Geometry("cube2"),
-//          new Geometry("cube3"),
-        };
-
-        Material mat = new Material(this.app.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
-
-        Stream.of(cubes).forEach(cube -> {
-            int i = Arrays.asList(cubes).indexOf(cube);
-
-            Box b = new Box(1, 1, 1);
-            cube.setMesh(b);
-
-            if(i == 0)
-            {
-                Material mat0 = mat.clone();
-
-                mat0.setColor("Color", ColorRGBA.Red);
-
-                cube.setMaterial(mat0);
-            }
-            else
-            {
-                mat.setColor("Color", ColorRGBA.Blue);
-                cube.setMaterial(mat);
-            }
-
-            this.app.getRootNode().attachChild(cube);
-
-            cube.setLocalTranslation(0, 0, 3*i);
-        });
-
         // Loads the space scene
-        this.app.getRootNode().attachChild(SkyFactory.createSky(
-                this.app.getAssetManager(), "Textures/Starfield.dds", EnvMapType.CubeMap));
+        Main.instance.getRootNode().attachChild(SkyFactory.createSky(
+                Main.instance.getAssetManager(), "Textures/Starfield.dds", EnvMapType.CubeMap));
         // Loads the player model
-        Spatial playerModel = this.app.getAssetManager().loadModel(SHIP_MODEL);
+        Spatial playerModel = Main.instance.getAssetManager().loadModel(SHIP_MODEL);
+        Spatial opponentModel = Main.instance.getAssetManager().loadModel(SHIP_MODEL);
 
         Recursive<Consumer<Spatial>> enableVertexColors = new Recursive<>();
 
@@ -117,31 +78,47 @@ public class PlayAppState extends AbstractAppState implements ActionListener
             else if(sp instanceof Geometry)
             {
                 Material geomMat = ((Geometry) sp).getMaterial();
-                geomMat.setBoolean("VertexColor", true);
+
+                try
+                {
+                    geomMat.setBoolean("VertexColor", true);
+                }
+                catch(IllegalArgumentException e)
+                {
+                    DebugLogger.println(e.getLocalizedMessage());
+                }
+
                 ((Geometry) sp).setMaterial(geomMat);
             }
         };
 
         enableVertexColors.function.accept(playerModel);
+        enableVertexColors.function.accept(opponentModel);
 
         // Makes some adjustment so it works properly
         playerModel.scale(.5f);
+        opponentModel.scale(.5f);
 
         // Creates our new character controller, passing in a few necessary parameters.
-        this.app.playerController = new ThirdPersonCharacterControl(playerModel, this.app.getCamera(), this.app);
-        this.app.playerController.initKeys(this.app.getInputManager());
+        Main.instance.playerController = new ThirdPersonCharacterControl(playerModel, Main.instance.getCamera());
+        Main.instance.playerController.initKeys(Main.instance.getInputManager());
+
+        Main.instance.otherPlayerController = new NetworkedCharacterControl();
 
         // Attaches the control to the player model
-        playerModel.addControl(this.app.playerController);
+        playerModel.addControl(Main.instance.playerController);
+        opponentModel.addControl(Main.instance.otherPlayerController);
 
         // Attaches the model to the root node
         // This makes it appear in the world
-        this.app.getRootNode().attachChild(playerModel);
+        Main.instance.getRootNode().attachChild(playerModel);
+        Main.instance.getRootNode().attachChild(opponentModel);
         // Registers the model with the Bullet Physics Engine
         bulletAppState.getPhysicsSpace().add(playerModel);
+        bulletAppState.getPhysicsSpace().add(opponentModel);
 
 
-        chaseCam = new RotationLockedChaseCamera(this.app.getCamera(), playerModel, this.app.getInputManager());
+        chaseCam = new RotationLockedChaseCamera(Main.instance.getCamera(), playerModel, Main.instance.getInputManager());
         // By default, you have to push down a mouse button to rotate the chase cam. This disables that.
         chaseCam.setDragToRotate(false);
         // By default, it looks at the player model's (0,0,0), which is at its feet. This looks a bit higher.
@@ -158,17 +135,17 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         // Gives it an angle to add more realism
         sun.setDirection(new Vector3f(-.1f, -.7f, -1f));
         // Places it in the world
-        this.app.getRootNode().addLight(sun);
+        Main.instance.getRootNode().addLight(sun);
 
         // Informs the client message listener of the current app states
-        this.app.clientMessageListener.setAppState(this);
+        Main.instance.clientMessageListener.setAppState(this);
 
         // Has this listen to certain keypresses during the game.
         // These are initialized in initKeys of ThirdPersonCharacterControl
         // The rest of them are also handled there
-        this.app.getInputManager().addMapping("Debug", new KeyTrigger(Keyboard.KEY_B));
-        this.app.getInputManager().addMapping("MouseCapture", new KeyTrigger(Keyboard.KEY_X));
-        this.app.getInputManager().addListener(this, "Debug", "MouseCapture");
+        Main.instance.getInputManager().addMapping("Debug", new KeyTrigger(Keyboard.KEY_B));
+        Main.instance.getInputManager().addMapping("MouseCapture", new KeyTrigger(Keyboard.KEY_X));
+        Main.instance.getInputManager().addListener(this, "Debug", "MouseCapture");
 
         for(int i = 0; i < 25; i++)
         {
@@ -177,10 +154,10 @@ public class PlayAppState extends AbstractAppState implements ActionListener
             boxMat.setColor("Color", ColorRGBA.Red);
             geom.setLocalTranslation(i, i % 2 == 0 ? 25 - i : i, new Random().nextInt(25));
             geom.setMaterial(boxMat);
-            geom.addControl(new DestructibleGhost(new BoxCollisionShape(new Vector3f(1f, 1f, 1f)), this.app));
+            geom.addControl(new DestructibleGhost(new BoxCollisionShape(new Vector3f(1f, 1f, 1f)), Main.instance, true));
 
-            this.app.getRootNode().attachChild(geom);
-            this.app.getStateManager().getState(BulletAppState.class).getPhysicsSpace().add(geom);
+            Main.instance.getRootNode().attachChild(geom);
+            Main.instance.getStateManager().getState(BulletAppState.class).getPhysicsSpace().add(geom);
         }
     }
 
@@ -189,25 +166,28 @@ public class PlayAppState extends AbstractAppState implements ActionListener
     public void update(float tpf)
     {
         // Updates the player controller, allowing it to move the player and handle animation changes.
-        app.playerController.update(tpf);
+        Main.instance.playerController.update(tpf);
 
-        // Sends out the current state of OUR player to the other client, in message form
-        app.client.send(app.playerController.toMessage());
-
+        if(Main.instance.client.isStarted())
+        {
+            // Sends out the current state of OUR player to the other client, in message form
+            Main.instance.client.send(Main.instance.playerController.toMessage());
+        }
 //        app.otherPlayerController.update(tpf);
     }
 
     // Called by our message listener when the other player sends out its info
     public void updateOpponentLocation(PlayerInformationMessage m)
     {
-        app.otherPlayerController.recieveMessage(m);
+        Main.instance.otherPlayerController.recieveMessage(m);
     }
 
     // Called by our message listener when the other player disconnects
     public void opponentDisconnected()
     {
+        /*
         // Stops the app
-        app.stop();
+        Main.instance.stop();
         // Gives the player a message. Eventually, this will probably instead go to a main menu.
         JOptionPane.showMessageDialog(
             null,
@@ -216,6 +196,7 @@ public class PlayAppState extends AbstractAppState implements ActionListener
             JOptionPane.ERROR_MESSAGE);
         // Exits the JVM
         System.exit(0);
+        */
     }
 
     // Called when a button press or other registered action occurs
@@ -226,14 +207,14 @@ public class PlayAppState extends AbstractAppState implements ActionListener
         if(name.equals("Debug") && isPressed)
         {
             // Enable debug mode for the physics engine (show colliders)
-            app.getStateManager().getState(BulletAppState.class).setDebugEnabled(!app.getStateManager().getState(BulletAppState.class).isDebugEnabled());
-            if(app.getStateManager().hasState(stats))
+            Main.instance.getStateManager().getState(BulletAppState.class).setDebugEnabled(!Main.instance.getStateManager().getState(BulletAppState.class).isDebugEnabled());
+            if(Main.instance.getStateManager().hasState(stats))
             {
-                app.getStateManager().detach(stats);
+                Main.instance.getStateManager().detach(stats);
             }
             else
             {
-                app.getStateManager().attach(stats);
+                Main.instance.getStateManager().attach(stats);
             }
         }
         else if(name.equals("MouseCapture") && isPressed)

@@ -21,18 +21,12 @@ import mygame.network.message.PlayerInformationMessage;
  */
 public class InitAppState extends AbstractAppState
 {
-    // Holds a reference to the app
-    private Main app;
-
     // When the app state first starts
     @Override
     public void initialize(AppStateManager stateManager, Application app)
     {
         // Has the superclass take care of some stuff
         super.initialize(stateManager, app);
-
-        // Casts the app to our Main app class and stores it for later use
-        this.app = (Main) app;
 
         // Registers the custom message classes for networking
         Serializer.registerClasses(PlayerInformationMessage.class,
@@ -53,15 +47,15 @@ public class InitAppState extends AbstractAppState
         try
         {
             // Initializes the networking client
-            this.app.client = Network.connectToServer(address, ServerMain.PORT);
-            this.app.client.start();
+            Main.instance.client = Network.connectToServer(address, ServerMain.PORT);
+            Main.instance.client.start();
 
             // Adds our listener so that we can recieve messages from the server
-            this.app.clientMessageListener = new ClientMessageListener().setAppState(this);
-            this.app.client.addMessageListener(this.app.clientMessageListener);
+            Main.instance.clientMessageListener = new ClientMessageListener().setAppState(this);
+            Main.instance.client.addMessageListener(Main.instance.clientMessageListener);
 
             // Requests the server for a connection
-            this.app.client.send(new ConnectionRequestMessage().setReliable(true));
+            Main.instance.client.send(new ConnectionRequestMessage().setReliable(true));
         }
         catch(IOException e)
         {
@@ -72,14 +66,14 @@ public class InitAppState extends AbstractAppState
 
             // Stops the app
             app.stop();
-            
+
             // Informs the player that something happened.
             JOptionPane.showMessageDialog(
                 null,
                 "Unable to connect to the server.\nReason: " + e.getLocalizedMessage(),
                 "Error: " + e.getClass().getName(),
                 JOptionPane.ERROR_MESSAGE);
-        
+
             // Kills the JVM
             System.exit(0);
         }
@@ -98,10 +92,10 @@ public class InitAppState extends AbstractAppState
         switch(status)
         {
             case PLAYER1:
-                app.isPlayer1 = true;
+                Main.instance.isPlayer1 = true;
                 break;
             case PLAYER2:
-                app.isPlayer1 = false;
+                Main.instance.isPlayer1 = false;
                 break;
             // If the request was denied, this was because there were already two people on the server.
             // Notify the player and close the app.
@@ -111,11 +105,11 @@ public class InitAppState extends AbstractAppState
                         "You cannot connect to the server because there were too many people.",
                         "Too many people",
                         JOptionPane.ERROR_MESSAGE);
-                app.stop();
+                Main.instance.stop();
                 break;
         }
 
         // Go to the next stage, which could be either waiting or playing, depending on if you're player 1 or player 2.
-        app.nextAppState();
+        Main.instance.nextAppState();
     }
 }

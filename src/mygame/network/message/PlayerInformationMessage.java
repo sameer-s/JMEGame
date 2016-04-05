@@ -37,6 +37,8 @@ public class PlayerInformationMessage extends AbstractMessage
 
     // TODO: pass LoopMode, possibly as ordinal ints.
 
+    public float currentSpeed;
+
     /**
      * An empty constructor. Required for the SpiderMonkey serializer.
      */

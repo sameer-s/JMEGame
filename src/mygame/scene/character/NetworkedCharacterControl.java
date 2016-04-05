@@ -1,4 +1,4 @@
-package mygame.character;
+package mygame.scene.character;
 
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.math.Quaternion;
@@ -15,10 +15,10 @@ public class NetworkedCharacterControl extends RigidBodyControl
     public NetworkedCharacterControl()
     {
         // Uses the character's mass for the physics engine
-        super(ThirdPersonCharacterControl._mass);
+        super();
         // Sets up the collider shape as the character does
         setCollisionShape(ThirdPersonCharacterControl.generateShape());
-        // Essentially allows this model to move
+
         setKinematic(true);
     }
 
@@ -63,17 +63,17 @@ public class NetworkedCharacterControl extends RigidBodyControl
             if(distance != 0)
             {
                 final Vector3f movement = targetLocation.subtract(currentLocation);
-                final Vector3f adjusted = movement.mult((tpf * ThirdPersonCharacterControl.maxSpeed) / distance);
+                final Vector3f adjusted = movement.mult((tpf * m.currentSpeed) / distance);
 
                 currentLocation = adjusted.length() > movement.length() ? movement.add(currentLocation) : adjusted.add(currentLocation);
             }
         }
 
         // Try this one if the bottom one doesnt work
-//         this.setPhysicsLocation(currentLocation);
+         this.setPhysicsLocation(currentLocation);
 
         System.out.println(currentLocation);
-        this.spatial.setLocalTranslation(currentLocation);
+//        this.spatial.setLocalTranslation(currentLocation);
     }
 
     private Quaternion currentRotation;

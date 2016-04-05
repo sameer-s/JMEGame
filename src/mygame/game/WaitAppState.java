@@ -14,9 +14,6 @@ import com.jme3.math.ColorRGBA;
  */
 public class WaitAppState extends AbstractAppState
 {
-    // Holds a reference to the app
-    private Main app;
-
     // The Spatial representing the text that shows up - "Waiting..."
     private BitmapText text;
 
@@ -27,25 +24,23 @@ public class WaitAppState extends AbstractAppState
         // Has the superclass take care of some initialization
         super.initialize(stateManager, app);
 
-        // Stores the app in a variable for later use
-        this.app = (Main) app;
         // Creates a new text node.
          // default font, NOT right to left
-        text = new BitmapText(this.app.getGuiFont(), false);
+        text = new BitmapText(Main.instance.getGuiFont(), false);
         // Default size
-        text.setSize(this.app.getGuiFont().getCharSet().getRenderedSize());
+        text.setSize(Main.instance.getGuiFont().getCharSet().getRenderedSize());
         // Orange color: RGB=(251/255, 130/255, 0)
         text.setColor(ColorRGBA.Orange);
         // Sets it to have that text
         text.setText("Waiting for one more player to join...");
         // Puts it in roughly the middle
-        text.setLocalTranslation(this.app.getSettings().getWidth() / 2, this.app.getSettings().getHeight() / 2, 0);
+        text.setLocalTranslation(Main.instance.getSettings().getWidth() / 2, Main.instance.getSettings().getHeight() / 2, 0);
         // Adds it to the world in an orthographic view (GUI node)
-        this.app.getGuiNode().attachChild(text);
+        Main.instance.getGuiNode().attachChild(text);
 
         // Sets the current app state to be this one
-        this.app.clientMessageListener.setAppState(this);
-        
+        Main.instance.clientMessageListener.setAppState(this);
+
         // A statement just for testing, that skips this stage (essentially) and goes to the next
         finish();
     }
@@ -56,13 +51,13 @@ public class WaitAppState extends AbstractAppState
      */
     public boolean isPlayer1()
     {
-        return app.isPlayer1;
+        return Main.instance.isPlayer1;
     }
 
     // Called by the client message listener to inform this app state that we are done waiting
     public void finish()
     {
-        app.nextAppState();
+        Main.instance.nextAppState();
     }
 
     // Called by the engine when this app state is being destroyed
@@ -73,7 +68,7 @@ public class WaitAppState extends AbstractAppState
         super.cleanup();
 
         // Removes the text, we don't need it nor want it getting in the way
-        app.getGuiNode().detachChild(text);
+        Main.instance.getGuiNode().detachChild(text);
     }
 
 }
