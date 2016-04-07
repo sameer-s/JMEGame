@@ -5,6 +5,7 @@ import com.jme3.math.Vector3f;
 import com.jme3.network.AbstractMessage;
 import com.jme3.network.serializing.Serializable;
 import com.jme3.network.serializing.Serializer;
+import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 
 /**
@@ -20,6 +21,23 @@ public abstract class NetSyncMessage
         Serializer.registerClasses(New.class, Update.class, Removed.class);
     }
 
+    @Serializable
+    public static class Root extends AbstractMessage
+    {
+        public Node rootNode;
+        
+        public Root setRootNode(Node rootNode)
+        {
+            this.rootNode = rootNode;
+            return this;
+        }
+        
+        public Root()
+        {
+            setReliable(false);
+        }
+    }
+    
     @Serializable
     public static class New extends AbstractMessage
     {

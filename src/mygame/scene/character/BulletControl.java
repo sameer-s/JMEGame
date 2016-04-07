@@ -2,11 +2,13 @@ package mygame.scene.character;
 
 import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.PhysicsTickListener;
+import com.jme3.bullet.collision.PhysicsCollisionObject;
 import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.control.GhostControl;
 import com.jme3.export.Savable;
 import com.jme3.math.Vector3f;
 import mygame.game.ServerMain;
+import mygame.scene.GameObject;
 
 /**
  *
@@ -42,8 +44,8 @@ public class BulletControl extends GhostControl implements PhysicsTickListener, 
     {
         this.getOverlappingObjects().stream()
                 .filter(obj -> obj instanceof mygame.scene.GameObject.Destructible)
-                .map(obj -> (mygame.scene.GameObject.Destructible) obj)
-                .forEach(mygame.scene.GameObject.Destructible::destroyGameObject);
+                .map(obj -> (GameObject.Destructible) obj)
+                .forEach(GameObject.Destructible::destroyGameObject);
 
         if(this.getOverlappingObjects().stream().anyMatch(obj -> obj instanceof mygame.scene.GameObject.Destructible))
         {
