@@ -19,8 +19,7 @@ import com.jme3.renderer.Camera;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
-import mygame.game.Main;
-import mygame.network.message.PlayerInformationMessage;
+import mygame.game.ServerMain;
 import org.lwjgl.input.Keyboard;
 
 /**
@@ -160,30 +159,6 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
         roll += maxRotation * (throttle / 100f) * tpf;
      }
 
-    /**
-     * Converts this object into a message to be networked
-     * @return The message.
-     */
-    public PlayerInformationMessage toMessage()
-    {
-        // Constructs the message
-        PlayerInformationMessage message = new PlayerInformationMessage();
-
-        // Gets the location and rotation data from this object and puts it in the messaeg
-        message.location = new float[]
-            {this.getPhysicsLocation().x, this.getPhysicsLocation().y, this.getPhysicsLocation().z};
-        message.rotation = new float[]
-            {this.getPhysicsRotation().getX(), this.getPhysicsRotation().getY(), getPhysicsRotation().getZ(), getPhysicsRotation().getW()};
-        message.currentSpeed = (throttle * maxSpeed) / 100f;
-
-        // Tells the message to use UDP rather than TCP protocol
-        // TCP -> slow, reliable (no packet loss)
-        // UDP -> fast, unreliable (packet loss, messages may appear in the wrong order)
-        message.setReliable(false);
-        // Returns the message
-        return message;
-    }
-
     public static CollisionShape generateShape()
     {
         // Generates a collision shape for this.
@@ -204,7 +179,7 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
         Geometry bullet = new Geometry("bullet" + bulletNum++, new Box(size.x, size.y, size.z));
         bullet.setLocalTranslation(this.getPhysicsLocation().add(0, .75f, 0));
 
-        Material mat = new Material(Main.instance.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
+        Material mat = new Material(ServerMain.instance.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
         mat.setColor("Color", ColorRGBA.Red);
 
         bullet.setMaterial(mat);
@@ -215,6 +190,6 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
 
         bullet.setLocalRotation(this.getPhysicsRotation());
 
-        Main.instance.addSpatial(bullet, bulletControl);
+        ServerMain.instance.addSpatial(bullet, bulletControl);
     }
 }

@@ -2,6 +2,7 @@ package mygame.scene.character;
 
 import com.jme3.input.ChaseCamera;
 import com.jme3.input.InputManager;
+import com.jme3.math.FastMath;
 import com.jme3.renderer.Camera;
 import com.jme3.scene.Spatial;
 
@@ -14,6 +15,12 @@ public class RotationLockedChaseCamera extends ChaseCamera
     public RotationLockedChaseCamera(Camera cam, Spatial target, InputManager man)
     {
         super(cam, target, man);
+
+        setDragToRotate(false);
+        setDefaultDistance(7);
+        setRotationSpeed(2);
+        setMinVerticalRotation(-(7 * FastMath.PI) / 16);
+
     }
 
     @Override
@@ -28,7 +35,9 @@ public class RotationLockedChaseCamera extends ChaseCamera
 
         if(target != null)
         {
-            target.getControl(ThirdPersonCharacterControl.class).setPhysicsRotation(this.cam.getRotation());
+            target.setLocalRotation(this.cam.getRotation());
         }
+
+//        cam.setLocation(cam.getLocation().add(0, 3, 0));
     }
 }
