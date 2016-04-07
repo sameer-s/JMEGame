@@ -12,7 +12,8 @@ import java.util.List;
  * @author ssuri4121
  */
 public class ClientSynchronizer implements MessageListener<Client>
-{
+{   
+    @SuppressWarnings("FieldMayBeFinal")
     private List<SynchronizationCallback> callbacks = new ArrayList<>();
     
     public ClientSynchronizer addCallback(SynchronizationCallback callback)
@@ -30,7 +31,15 @@ public class ClientSynchronizer implements MessageListener<Client>
     @Override
     public void messageReceived(Client source, Message m)
     {
-        
+        if(m instanceof NetSyncMessage.Root)
+        {
+            NetSyncMessage.Root rootMessage = (NetSyncMessage.Root) m;
+            
+            for(SynchronizationCallback callback : callbacks)
+            {
+                callback.synchronize(rootMessage.rootNode);
+            }
+        }
     }
     
     public static interface SynchronizationCallback

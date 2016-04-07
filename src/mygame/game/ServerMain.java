@@ -18,6 +18,7 @@ import com.jme3.network.Network;
 import com.jme3.network.Server;
 import com.jme3.network.serializing.Serializer;
 import com.jme3.scene.Geometry;
+import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
 import com.jme3.system.AppSettings;
@@ -29,10 +30,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import java.util.function.Consumer;
 import mygame.debug.DebugLogger;
 import mygame.game.message.NameRequestMessage;
 import mygame.scene.DestructibleGhost;
 import mygame.scene.character.RotationLockedChaseCamera;
+import mygame.util.Recursive;
 
 /**
  * The main class for the client application. It has a number of purposes:
@@ -112,6 +115,7 @@ public class ServerMain extends SimpleApplication implements MessageListener<Hos
         players.put(name, null);
         Spatial playerModel = assetManager.loadModel(Constants.Scene.SHIP_MODEL);
         playerModel.setName("Player" + name);
+        
 //        playerModel.addControl(new GhostControl());
         playerShips.put(name, playerModel);
 
