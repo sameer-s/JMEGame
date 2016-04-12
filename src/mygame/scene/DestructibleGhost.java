@@ -10,7 +10,7 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import java.util.Timer;
 import java.util.TimerTask;
-import mygame.game.ServerMain;
+import mygame.game.Main;
 
 /**
  *
@@ -18,17 +18,17 @@ import mygame.game.ServerMain;
  */
 public class DestructibleGhost extends GhostControl implements mygame.scene.GameObject.Destructible
 {
-    private ServerMain app;
+    private Main app;
     boolean explode;
 
-    public DestructibleGhost(CollisionShape shape, ServerMain app, boolean explode)
+    public DestructibleGhost(CollisionShape shape, Main app, boolean explode)
     {
         super(shape);
         this.explode = explode;
         this.app = app;
     }
 
-    public DestructibleGhost(CollisionShape shape, ServerMain app)
+    public DestructibleGhost(CollisionShape shape, Main app)
     {
         this(shape, app, false);
     }
@@ -42,8 +42,8 @@ public class DestructibleGhost extends GhostControl implements mygame.scene.Game
                 if(explode)
                 {
                     ParticleEmitter fireEffect = new ParticleEmitter("Emitter", ParticleMesh.Type.Triangle, 30);
-                    Material fireMat = new Material(ServerMain.instance.getAssetManager(), "Common/MatDefs/Misc/Particle.j3md");
-                    fireMat.setTexture("Texture", ServerMain.instance.getAssetManager().loadTexture("Effects/Explosion/flame.png"));
+                    Material fireMat = new Material(Main.instance.getAssetManager(), "Common/MatDefs/Misc/Particle.j3md");
+                    fireMat.setTexture("Texture", Main.instance.getAssetManager().loadTexture("Effects/Explosion/flame.png"));
                     fireEffect.setMaterial(fireMat);
                     fireEffect.setImagesX(2); fireEffect.setImagesY(2); // 2x2 texture animation
                     fireEffect.setEndColor( new ColorRGBA(1f, 0f, 0f, 1f) );   // red
@@ -56,14 +56,14 @@ public class DestructibleGhost extends GhostControl implements mygame.scene.Game
                     fireEffect.setHighLife(3f);
                     fireEffect.setLocalTranslation(spatial.getLocalTranslation());
                     fireEffect.getParticleInfluencer().setVelocityVariation(0.3f);
-                    ServerMain.instance.getRootNode().attachChild(fireEffect);
+                    Main.instance.getRootNode().attachChild(fireEffect);
 
                     Timer t = new Timer();
                     t.schedule(new TimerTask(){
                         @Override
                         public void run()
                         {
-                            ServerMain.instance.removeSpatial(fireEffect);
+                            Main.instance.removeSpatial(fireEffect);
                         }
                     }, 150L);
                 }

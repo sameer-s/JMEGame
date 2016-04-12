@@ -1,22 +1,19 @@
 package mygame.game;
 
 import com.jme3.app.SimpleApplication;
+import com.jme3.app.StatsAppState;
 import com.jme3.app.state.AppState;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.PhysicsTickListener;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.control.PhysicsControl;
-import com.jme3.input.ChaseCamera;
+import com.jme3.input.controls.ActionListener;
+import com.jme3.input.controls.KeyTrigger;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
-import com.jme3.network.ConnectionListener;
-import com.jme3.network.HostedConnection;
-import com.jme3.network.Message;
-import com.jme3.network.MessageListener;
-import com.jme3.network.Network;
-import com.jme3.network.Server;
-import com.jme3.network.serializing.Serializer;
+import com.jme3.renderer.Camera;
+import com.jme3.renderer.ViewPort;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
@@ -24,18 +21,12 @@ import com.jme3.scene.shape.Box;
 import com.jme3.system.AppSettings;
 import com.jme3.util.SkyFactory;
 import com.jme3.util.SkyFactory.EnvMapType;
-import java.io.IOException;
-import java.net.Inet4Address;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
-import java.util.function.Consumer;
 import mygame.debug.DebugLogger;
-import mygame.game.message.NameRequestMessage;
 import mygame.scene.DestructibleGhost;
 import mygame.scene.character.RotationLockedChaseCamera;
-import mygame.util.Recursive;
+import org.lwjgl.input.Keyboard;
 
 /**
  * The main class for the client application. It has a number of purposes:
@@ -45,28 +36,28 @@ import mygame.util.Recursive;
  * *
  * @author Sameer Suri
  */
-public class ServerMain extends SimpleApplication implements MessageListener<HostedConnection>, ConnectionListener
+public class Main extends SimpleApplication implements ActionListener
 {
     /* Game stuff: */
 
-    public static ServerMain instance;
-
-    private Map<String, HostedConnection> players;
-    private Map<String, Spatial> playerShips;
+    public static Main instance;
 
     private String name;
 
-    // The networking server.
-    Server server;
+    private RotationLockedChaseCamera player1Cam, player2Cam;
+
+    private Camera cam2;
+
+    private static final String SHIP_MODEL = "Models/ship/SpaceShip.j3o";
 
     public static void main(String... args)
     {
-        ServerMain gp = new ServerMain();
+        Main gp = new Main();
         instance = gp;
         gp.start();
     }
 
-    public ServerMain()
+    public Main()
     {
         super(new AppState[] {});
     }
@@ -75,53 +66,41 @@ public class ServerMain extends SimpleApplication implements MessageListener<Hos
     @Override
     public void simpleInitApp()
     {
+        this.getSettings().setWidth(this.getSettings().getWidth() / 2);
         settings.setUseJoysticks(true);
 
         this.setPauseOnLostFocus(false);
 
         inputManager.setCursorVisible(false);
 
-        Serializer.registerClasses(Constants.Network.messageClasses);
-
-        try
-        {
-            // Creates the server and starts it.
-            server = Network.createServer(Constants.Network.PORT);
-            server.start();
-
-            // Adds the connection listener so we can be notified when a client connects or leaves
-            server.addConnectionListener(this);
-            // Allows this to recieve messages from clients
-            server.addMessageListener(this);
-
-            System.out.printf("Server hosted:%n\tIP=\"%s\"%n\tPort=\"%d\"%n", Inet4Address.getLocalHost().getHostAddress(), Constants.Network.PORT);
-        }
-        catch(IOException e)
-        {
-            // If an error occured, print it to the console, and exit.
-            System.err.println("UNABLE TO START SERVER ON PORT: " + Constants.Network.PORT);
-            System.err.println("STACK TRACE:");
-            e.printStackTrace(System.err);
-            stop();
-            // Kill the JVM
-            System.exit(0);
-        }
-
-        players = new HashMap<>();
-        playerShips = new HashMap<>();
+        rootNode.setName("RootNode");
 
         name = UUID.randomUUID().toString().split("-")[0];
 
-        players.put(name, null);
-        Spatial playerModel = assetManager.loadModel(Constants.Scene.SHIP_MODEL);
-        playerModel.setName("Player" + name);
-        
-//        playerModel.addControl(new GhostControl());
-        playerShips.put(name, playerModel);
+        Node player1Node = new Node();
+        Spatial player1Model = assetManager.loadModel(SHIP_MODEL);
+        player1Model.setLocalTranslation(0, -2.5f, 0);
+        player1Model.setName("Player1" + name);
+        player1Node.attachChild(player1Model);
+        player1Node.setLocalTranslation(0, -2.5f, 0);
+        rootNode.attachChild(player1Node);
+        player1Cam = new RotationLockedChaseCamera(cam, player1Node, inputManager);
 
-        rootNode.attachChild(playerModel);
+        cam2 = cam.clone();
+        Node player2Node = new Node();
+        Spatial player2Model = assetManager.loadModel(SHIP_MODEL);
+        player2Model.setLocalTranslation(0, -2.5f, 0);
+        player2Model.setName("Player2" + name);
+        player2Node.attachChild(player2Model);
+        player2Node.setLocalTranslation(0, 2.5f, 0);
+        rootNode.attachChild(player2Node);
+        player2Cam = new RotationLockedChaseCamera(cam2, player2Node, inputManager);
 
-        ChaseCamera camera = new RotationLockedChaseCamera(cam, playerModel, inputManager);
+        for(int i = 0; i < player2Cam.movementActions.length; i++)
+        {
+            player2Cam.movementActions[i] = player2Cam.movementActions[i] + "_Player2";
+        }
+        inputManager.addListener(player2Cam, player2Cam.movementActions);
 
         BulletAppState bulletAppState = new BulletAppState();
         stateManager.attach(bulletAppState);
@@ -141,16 +120,45 @@ public class ServerMain extends SimpleApplication implements MessageListener<Hos
         }
 
         rootNode.attachChild(SkyFactory.createSky(assetManager, "Textures/Starfield.dds", EnvMapType.CubeMap));
+
+        inputManager.addMapping("MouseFocus", new KeyTrigger(Keyboard.KEY_X));
+        inputManager.addMapping("Debug", new KeyTrigger(Keyboard.KEY_B));
+        inputManager.addMapping("ReloadJoysticks", new KeyTrigger(Keyboard.KEY_R));
+
+        inputManager.addListener(this, "MouseFocus", "Debug", "ReloadJoysticks");
+
+        JoystickInit.init(inputManager);
+
+        // handling split screen
+        cam.setViewPort(0f, .5f, 0f, 1f);
+        cam2.setViewPort(.5f, 1f, 0f, 1f);
+
+        viewPort = renderManager.createMainView("Player 1 View", cam);
+        viewPort.setClearFlags(true, true, true);
+        viewPort.attachScene(rootNode);
+        viewPort.setBackgroundColor(ColorRGBA.Red);
+
+        ViewPort viewPort2 = renderManager.createMainView("Player 2 View", cam2);
+        viewPort2.setClearFlags(true, true, true);
+        viewPort2.attachScene(rootNode);
+        viewPort2.setBackgroundColor(ColorRGBA.Black);
+
+        cam.setFrustumPerspective(45f, (float)cam.getWidth() / (2 * cam.getHeight()), 1f, 1000f);
+        cam2.setFrustumPerspective(45f, (float)cam.getWidth() / (2 * cam.getHeight()), 1f, 1000f);
+
+        cam.update();
+        cam2.update();
+    }
+
+    @Override
+    public void simpleUpdate(float tpf)
+    {
     }
 
     // Cleans up resources, closes the window, and kills the app.
     @Override
     public void destroy()
     {
-        // Stops the networking to end the connection cleanly
-        if(server != null)
-            server.close();
-
         DebugLogger.close();
 
         // Has the superclass finish cleanup
@@ -215,35 +223,35 @@ public class ServerMain extends SimpleApplication implements MessageListener<Hos
         spatial = null;
     }
 
+
     @Override
-    public void messageReceived(HostedConnection source, Message m)
+    public void onAction(String name, boolean isPressed, float tpf)
     {
-        if(m instanceof NameRequestMessage)
+        switch(name)
         {
-            NameRequestMessage nrm = (NameRequestMessage) m;
-            if(nrm.name.equals("") || players.containsKey(nrm.name))
-            {
-                source.send(new NameRequestMessage());
-            }
-            else
-            {
-                players.put(nrm.name, source);
-                Spatial playerModel = assetManager.loadModel(Constants.Scene.SHIP_MODEL);
-                playerModel.setName("Player" + nrm.name);
-                playerShips.put(nrm.name, playerModel);
-            }
+            case "MouseFocus":
+                if(isPressed)
+                {
+                    player1Cam.setDragToRotate(!player1Cam.isDragToRotate());
+                    player2Cam.setDragToRotate(!player2Cam.isDragToRotate());
+                }
+                break;
+            case "Debug":
+                if(isPressed)
+                {
+                    this.getStateManager().getState(BulletAppState.class).setDebugEnabled(!this.getStateManager().getState(BulletAppState.class).isDebugEnabled());
+
+                    StatsAppState stats = this.getStateManager().getState(StatsAppState.class);
+                    if(stats == null) this.getStateManager().attach(new StatsAppState());
+                    else this.getStateManager().detach(stats);
+                }
+                break;
+            case "ReloadJoysticks":
+                if(isPressed)
+                {
+                    JoystickInit.init(inputManager);
+                }
+                break;
         }
-    }
-
-    @Override
-    public void connectionAdded(Server server, HostedConnection conn)
-    {
-        conn.send(new NameRequestMessage());
-    }
-
-    @Override
-    public void connectionRemoved(Server server, HostedConnection conn)
-    {
-
     }
 }

@@ -19,7 +19,7 @@ import com.jme3.renderer.Camera;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
-import mygame.game.ServerMain;
+import mygame.game.Main;
 import org.lwjgl.input.Keyboard;
 
 /**
@@ -179,7 +179,7 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
         Geometry bullet = new Geometry("bullet" + bulletNum++, new Box(size.x, size.y, size.z));
         bullet.setLocalTranslation(this.getPhysicsLocation().add(0, .75f, 0));
 
-        Material mat = new Material(ServerMain.instance.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
+        Material mat = new Material(Main.instance.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
         mat.setColor("Color", ColorRGBA.Red);
 
         bullet.setMaterial(mat);
@@ -190,6 +190,6 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
 
         bullet.setLocalRotation(this.getPhysicsRotation());
 
-        ServerMain.instance.addSpatial(bullet, bulletControl);
+        Main.instance.addSpatial(bullet, bulletControl);
     }
 }

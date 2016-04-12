@@ -7,7 +7,7 @@ import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.control.GhostControl;
 import com.jme3.export.Savable;
 import com.jme3.math.Vector3f;
-import mygame.game.ServerMain;
+import mygame.game.Main;
 import mygame.scene.GameObject;
 
 /**
@@ -25,7 +25,7 @@ public class BulletControl extends GhostControl implements PhysicsTickListener, 
     {
         super(shape);
         this.movementVector = movementVector;
-        ServerMain.instance.addPhysicsTickListener(this);
+        Main.instance.addPhysicsTickListener(this);
     }
 
     public BulletControl(CollisionShape shape, Vector3f movementVector, float ttl)
@@ -49,7 +49,7 @@ public class BulletControl extends GhostControl implements PhysicsTickListener, 
 
         if(this.getOverlappingObjects().stream().anyMatch(obj -> obj instanceof mygame.scene.GameObject.Destructible))
         {
-            ServerMain.instance.removeSpatial(spatial);
+            Main.instance.removeSpatial(spatial);
         }
     }
 
@@ -62,7 +62,7 @@ public class BulletControl extends GhostControl implements PhysicsTickListener, 
 
         if(ttl <= 0)
         {
-            ServerMain.instance.removeSpatial(spatial);
+            Main.instance.removeSpatial(spatial);
         }
 
         this.spatial.setLocalTranslation(this.spatial.getLocalTranslation().add(movementVector));
