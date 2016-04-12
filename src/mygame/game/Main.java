@@ -26,6 +26,7 @@ import java.util.UUID;
 import mygame.debug.DebugLogger;
 import mygame.scene.DestructibleGhost;
 import mygame.scene.character.RotationLockedChaseCamera;
+import mygame.scene.character.ShipCharacterControl;
 import org.lwjgl.input.Keyboard;
 
 /**
@@ -83,6 +84,7 @@ public class Main extends SimpleApplication implements ActionListener
         player1Model.setName("Player1" + name);
         player1Node.attachChild(player1Model);
         player1Node.setLocalTranslation(0, -2.5f, 0);
+        player1Node.addControl(new ShipCharacterControl(player1Node, cam).initKeys(inputManager));
         rootNode.attachChild(player1Node);
         player1Cam = new RotationLockedChaseCamera(cam, player1Node, inputManager);
 
@@ -93,6 +95,7 @@ public class Main extends SimpleApplication implements ActionListener
         player2Model.setName("Player2" + name);
         player2Node.attachChild(player2Model);
         player2Node.setLocalTranslation(0, 2.5f, 0);
+        player2Node.addControl(new ShipCharacterControl(player2Node, cam2));
         rootNode.attachChild(player2Node);
         player2Cam = new RotationLockedChaseCamera(cam2, player2Node, inputManager);
 
@@ -108,9 +111,9 @@ public class Main extends SimpleApplication implements ActionListener
 
         for(int i = 0; i < 25; i++)
         {
-            Geometry geom = new Geometry("RedBox", new Box(1f, 1f, 1f));
+            Geometry geom = new Geometry("BlueBox" + i, new Box(1f, 1f, 1f));
             Material boxMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-            boxMat.setColor("Color", ColorRGBA.Red);
+            boxMat.setColor("Color", ColorRGBA.Blue);
             geom.setLocalTranslation(i, i % 2 == 0 ? 25 - i : i, new Random().nextInt(25));
             geom.setMaterial(boxMat);
             geom.addControl(new DestructibleGhost(new BoxCollisionShape(new Vector3f(1f, 1f, 1f)), this, true));
@@ -136,15 +139,13 @@ public class Main extends SimpleApplication implements ActionListener
         viewPort = renderManager.createMainView("Player 1 View", cam);
         viewPort.setClearFlags(true, true, true);
         viewPort.attachScene(rootNode);
-        viewPort.setBackgroundColor(ColorRGBA.Red);
 
         ViewPort viewPort2 = renderManager.createMainView("Player 2 View", cam2);
         viewPort2.setClearFlags(true, true, true);
         viewPort2.attachScene(rootNode);
-        viewPort2.setBackgroundColor(ColorRGBA.Black);
 
         cam.setFrustumPerspective(45f, (float)cam.getWidth() / (2 * cam.getHeight()), 1f, 1000f);
-        cam2.setFrustumPerspective(45f, (float)cam.getWidth() / (2 * cam.getHeight()), 1f, 1000f);
+        cam2.setFrustumPerspective(45f, (float)cam2.getWidth() / (2 * cam2.getHeight()), 1f, 1000f);
 
         cam.update();
         cam2.update();
