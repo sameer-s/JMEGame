@@ -8,6 +8,7 @@ import com.jme3.effect.ParticleMesh;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import mygame.game.Main;
@@ -16,27 +17,25 @@ import mygame.game.Main;
  *
  * @author Sameer Suri
  */
-public class DestructibleGhost extends GhostControl implements mygame.scene.GameObject.Destructible
+public class DestructibleGhost extends GhostControl implements DestructibleGameObject
 {
-    private Main app;
     boolean explode;
 
-    public DestructibleGhost(CollisionShape shape, Main app, boolean explode)
+    public DestructibleGhost(CollisionShape shape, boolean explode)
     {
         super(shape);
         this.explode = explode;
-        this.app = app;
     }
 
-    public DestructibleGhost(CollisionShape shape, Main app)
+    public DestructibleGhost(CollisionShape shape)
     {
-        this(shape, app, false);
+        this(shape, false);
     }
 
     @Override
-    public void destroyGameObject()
+    public void destroyGameObject(Map<String, Object> data)
     {
-        app.enqueue(() -> {
+        Main.instance.enqueue(() -> {
             try
             {
                 if(explode)
@@ -69,9 +68,9 @@ public class DestructibleGhost extends GhostControl implements mygame.scene.Game
                 }
 
                 spatial.removeFromParent();
-                app.getStateManager().getState(BulletAppState.class).getPhysicsSpace().remove(spatial);
+                Main.instance.getStateManager().getState(BulletAppState.class).getPhysicsSpace().remove(spatial);
 
-                spatial.removeControl(DestructibleGhost.class);
+                spatial.removeControl(this);
 
                 spatial = null;
             }

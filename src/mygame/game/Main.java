@@ -4,9 +4,9 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.app.StatsAppState;
 import com.jme3.app.state.AppState;
 import com.jme3.bullet.BulletAppState;
-import com.jme3.bullet.PhysicsTickListener;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.control.PhysicsControl;
+import com.jme3.font.BitmapText;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.material.Material;
@@ -19,11 +19,15 @@ import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
 import com.jme3.system.AppSettings;
+import com.jme3.ui.Picture;
 import com.jme3.util.SkyFactory;
 import com.jme3.util.SkyFactory.EnvMapType;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.util.HashMap;
 import java.util.Random;
-import java.util.UUID;
 import mygame.debug.DebugLogger;
+import mygame.scene.DestructibleCollisionListener;
 import mygame.scene.DestructibleGhost;
 import mygame.scene.character.RotationLockedChaseCamera;
 import mygame.scene.character.ShipCharacterControl;
@@ -43,18 +47,29 @@ public class Main extends SimpleApplication implements ActionListener
 
     public static Main instance;
 
-    private String name;
-
     private RotationLockedChaseCamera player1Cam, player2Cam;
 
     private Camera cam2;
 
     private static final String SHIP_MODEL = "Models/ship/SpaceShip.j3o";
 
+    private HashMap<String, Spatial> guiElements = new HashMap<>();
+
+    private String loser = null;
+
     public static void main(String... args)
     {
+        AppSettings settings = new AppSettings(true);
+        settings.setUseJoysticks(true);
+        settings.setFullscreen(true);
+
+        GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+        settings.setWidth(gd.getDisplayMode().getWidth());
+        settings.setHeight(gd.getDisplayMode().getHeight());
+
         Main gp = new Main();
         instance = gp;
+        gp.setSettings(settings);
         gp.start();
     }
 
@@ -67,47 +82,45 @@ public class Main extends SimpleApplication implements ActionListener
     @Override
     public void simpleInitApp()
     {
-        this.getSettings().setWidth(this.getSettings().getWidth() / 2);
-        settings.setUseJoysticks(true);
+        BulletAppState bulletAppState = new BulletAppState();
+        stateManager.attach(bulletAppState);
+        bulletAppState.getPhysicsSpace().setGravity(Vector3f.ZERO);
+        bulletAppState.getPhysicsSpace().addCollisionListener(new DestructibleCollisionListener());
 
         this.setPauseOnLostFocus(false);
 
         inputManager.setCursorVisible(false);
 
-        rootNode.setName("RootNode");
-
-        name = UUID.randomUUID().toString().split("-")[0];
-
         Node player1Node = new Node();
         Spatial player1Model = assetManager.loadModel(SHIP_MODEL);
         player1Model.setLocalTranslation(0, -2.5f, 0);
-        player1Model.setName("Player1" + name);
+        player1Model.setName("Player1");
         player1Node.attachChild(player1Model);
-        player1Node.setLocalTranslation(0, -2.5f, 0);
-        player1Node.addControl(new ShipCharacterControl(player1Node, cam).initKeys(inputManager));
+        player1Node.setLocalTranslation(0, 0, 50);
+        player1Node.addControl(new ShipCharacterControl(player1Node, "").initKeys(inputManager).registerMappings(inputManager));
         rootNode.attachChild(player1Node);
+        stateManager.getState(BulletAppState.class).getPhysicsSpace().add(player1Node);
         player1Cam = new RotationLockedChaseCamera(cam, player1Node, inputManager);
+
 
         cam2 = cam.clone();
         Node player2Node = new Node();
         Spatial player2Model = assetManager.loadModel(SHIP_MODEL);
         player2Model.setLocalTranslation(0, -2.5f, 0);
-        player2Model.setName("Player2" + name);
+        player2Model.setName("Player2");
         player2Node.attachChild(player2Model);
-        player2Node.setLocalTranslation(0, 2.5f, 0);
-        player2Node.addControl(new ShipCharacterControl(player2Node, cam2));
+        player2Node.setLocalTranslation(50, 0, 0);
+        player2Node.addControl(new ShipCharacterControl(player2Node, "_Player2").registerMappings(inputManager));
         rootNode.attachChild(player2Node);
+        stateManager.getState(BulletAppState.class).getPhysicsSpace().add(player2Node);
         player2Cam = new RotationLockedChaseCamera(cam2, player2Node, inputManager);
+
 
         for(int i = 0; i < player2Cam.movementActions.length; i++)
         {
             player2Cam.movementActions[i] = player2Cam.movementActions[i] + "_Player2";
         }
         inputManager.addListener(player2Cam, player2Cam.movementActions);
-
-        BulletAppState bulletAppState = new BulletAppState();
-        stateManager.attach(bulletAppState);
-        bulletAppState.getPhysicsSpace().setGravity(Vector3f.ZERO);
 
         for(int i = 0; i < 25; i++)
         {
@@ -116,7 +129,7 @@ public class Main extends SimpleApplication implements ActionListener
             boxMat.setColor("Color", ColorRGBA.Blue);
             geom.setLocalTranslation(i, i % 2 == 0 ? 25 - i : i, new Random().nextInt(25));
             geom.setMaterial(boxMat);
-            geom.addControl(new DestructibleGhost(new BoxCollisionShape(new Vector3f(1f, 1f, 1f)), this, true));
+            geom.addControl(new DestructibleGhost(new BoxCollisionShape(new Vector3f(1f, 1f, 1f)), true));
 
             rootNode.attachChild(geom);
             stateManager.getState(BulletAppState.class).getPhysicsSpace().add(geom);
@@ -144,16 +157,57 @@ public class Main extends SimpleApplication implements ActionListener
         viewPort2.setClearFlags(true, true, true);
         viewPort2.attachScene(rootNode);
 
-        cam.setFrustumPerspective(45f, (float)cam.getWidth() / (2 * cam.getHeight()), 1f, 1000f);
-        cam2.setFrustumPerspective(45f, (float)cam2.getWidth() / (2 * cam2.getHeight()), 1f, 1000f);
+        System.out.printf("width=%d, height=%d%n", settings.getWidth(), settings.getHeight());
+        System.out.println((float) settings.getWidth() / (2 * settings.getHeight()));
+
+        cam.setFrustumPerspective(45f, (float) settings.getWidth() / (2 * settings.getHeight()), 1f, 1000f);
+        cam2.setFrustumPerspective(45f, (float) settings.getWidth() / (2 * settings.getHeight()), 1f, 1000f);
 
         cam.update();
         cam2.update();
+
+        initGui();
+    }
+
+    private void initGui()
+    {
+        BitmapText scoreText1 = new BitmapText(guiFont, false);
+        scoreText1.setSize(guiFont.getCharSet().getRenderedSize());
+        scoreText1.setColor(ColorRGBA.White);
+        scoreText1.setText("Score: 0");
+        scoreText1.setLocalTranslation(10, settings.getHeight(), 0);
+        guiNode.attachChild(scoreText1);
+        guiElements.put("P1Score", scoreText1);
+
+        BitmapText scoreText2 = new BitmapText(guiFont, false);
+        scoreText2.setSize(guiFont.getCharSet().getRenderedSize());
+        scoreText2.setColor(ColorRGBA.White);
+        scoreText2.setText("Score: 0");
+        scoreText2.setLocalTranslation(settings.getWidth() - scoreText2.getLineWidth() - 10,
+                settings.getHeight(), 0);
+        guiNode.attachChild(scoreText2);
+        guiElements.put("P2Score", scoreText2);
+    }
+
+    private BitmapText getText(String name)
+    {
+        return (BitmapText) guiElements.get(name);
+    }
+
+    private Picture getPicture(String name)
+    {
+        return (Picture) guiElements.get(name);
     }
 
     @Override
     public void simpleUpdate(float tpf)
     {
+        int winner = loser == null ? 0 : (loser.equals("") ? 2 : 1);
+        getText("P1Score").setText("Score: " + winner % 2);
+        getText("P2Score").setText("Score: " + winner / 2);
+        getText("P2Score").setLocalTranslation(
+                settings.getWidth() - getText("P2Score").getLineWidth() - 10,
+                settings.getHeight(), 0);
     }
 
     // Cleans up resources, closes the window, and kills the app.
@@ -190,14 +244,6 @@ public class Main extends SimpleApplication implements ActionListener
         }
     }
 
-    public void addPhysicsTickListener(PhysicsTickListener... tickListeners)
-    {
-        for(PhysicsTickListener tickListener : tickListeners)
-        {
-           this.getStateManager().getState(BulletAppState.class).getPhysicsSpace().addTickListener(tickListener);
-        }
-    }
-
     public void removeSpatial(final Spatial spatial)
     {
         enqueue(() -> {
@@ -210,20 +256,12 @@ public class Main extends SimpleApplication implements ActionListener
                 {
                     spatial.removeControl(spatial.getControl(0));
                 }
-
-                nullifySpatial(spatial);
             }
             catch(NullPointerException npe) {}
 
             return 0;
         });
     }
-
-    private void nullifySpatial(Spatial spatial)
-    {
-        spatial = null;
-    }
-
 
     @Override
     public void onAction(String name, boolean isPressed, float tpf)
@@ -250,9 +288,15 @@ public class Main extends SimpleApplication implements ActionListener
             case "ReloadJoysticks":
                 if(isPressed)
                 {
+                    System.out.println("Reloading Joysticks");
                     JoystickInit.init(inputManager);
                 }
                 break;
         }
+    }
+
+    public void playerLoses(String code)
+    {
+        this.loser = code;
     }
 }

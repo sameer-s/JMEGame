@@ -3,9 +3,10 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/ssuri4121/Documents/jme/JMEGame/src/mygame/scene/character/ShipCharacterControl.java</file>
-            <file>file:/C:/Users/ssuri4121/Documents/jme/JMEGame/src/mygame/game/Main.java</file>
-            <file>file:/C:/Users/ssuri4121/Documents/jme/JMEGame/src/mygame/scene/character/ThirdPersonCharacterControl.java</file>
+            <file>file:/C:/Users/Sameer/Work/Java/JMonkeyEngine/Projects/JMEGame/src/mygame/scene/character/ShipCharacterControl.java</file>
+            <file>file:/C:/Users/Sameer/Work/Java/JMonkeyEngine/Projects/JMEGame/src/mygame/scene/DestructibleGhost.java</file>
+            <file>file:/C:/Users/Sameer/Work/Java/JMonkeyEngine/Projects/JMEGame/src/mygame/scene/DestructibleCollisionListener.java</file>
+            <file>file:/C:/Users/Sameer/Work/Java/JMonkeyEngine/Projects/JMEGame/src/mygame/game/Main.java</file>
         </group>
     </open-files>
 </project-private>

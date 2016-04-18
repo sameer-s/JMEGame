@@ -1,56 +1,51 @@
 package mygame.scene.character;
 
-import com.jme3.bullet.PhysicsSpace;
-import com.jme3.bullet.PhysicsTickListener;
-import com.jme3.bullet.collision.PhysicsCollisionObject;
 import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.control.GhostControl;
-import com.jme3.export.Savable;
 import com.jme3.math.Vector3f;
+import java.util.HashMap;
+import java.util.Map;
 import mygame.game.Main;
-import mygame.scene.GameObject;
+import mygame.scene.DestructibleGameObject;
 
 /**
  *
  * @author Sameer Suri
  */
-public class BulletControl extends GhostControl implements PhysicsTickListener, Savable
+public class BulletControl extends GhostControl implements DestructibleGameObject
 {
     private float ttl = Float.MAX_VALUE;
 
     private Vector3f movementVector;
 
-    @SuppressWarnings("LeakingThisInConstructor")
-    public BulletControl(CollisionShape shape, Vector3f movementVector)
+    private String playerCode;
+
+    public BulletControl(CollisionShape shape, Vector3f movementVector, String playerCode)
     {
         super(shape);
         this.movementVector = movementVector;
-        Main.instance.addPhysicsTickListener(this);
+        this.playerCode = playerCode;
     }
 
-    public BulletControl(CollisionShape shape, Vector3f movementVector, float ttl)
+    public BulletControl(CollisionShape shape, Vector3f movementVector, float ttl, String playerCode)
     {
-        this(shape, movementVector);
+        this(shape, movementVector, playerCode);
         this.ttl = ttl;
     }
 
     @Override
-    public void prePhysicsTick(PhysicsSpace space, float tpf)
+    public void destroyGameObject(Map<String, Object> data)
     {
+
     }
 
     @Override
-    public void physicsTick(PhysicsSpace space, float tpf)
+    public Map<String, Object> getInfo()
     {
-        this.getOverlappingObjects().stream()
-                .filter(obj -> obj instanceof mygame.scene.GameObject.Destructible)
-                .map(obj -> (GameObject.Destructible) obj)
-                .forEach(GameObject.Destructible::destroyGameObject);
-
-        if(this.getOverlappingObjects().stream().anyMatch(obj -> obj instanceof mygame.scene.GameObject.Destructible))
-        {
-            Main.instance.removeSpatial(spatial);
-        }
+        HashMap<String, Object> info = new HashMap<>();
+        info.put("ObjectType", "Bullet");
+        info.put("PlayerCode", playerCode);
+        return info;
     }
 
     @Override

@@ -32,8 +32,11 @@ import org.lwjgl.input.Keyboard;
  *
  * I will probably eventually release a library version of this that is MUCH easier to use.
  *
+ * Deprecated. Use ShipCharacterControl instead.
+ * 
  * @author Sameer Suri
  */
+@Deprecated
 public class ThirdPersonCharacterControl extends RigidBodyControl
                                          implements ActionListener, AnalogListener
 {
@@ -186,7 +189,7 @@ public class ThirdPersonCharacterControl extends RigidBodyControl
 
         BulletControl bulletControl = new BulletControl(new BoxCollisionShape(size),
                 this.getPhysicsRotation().getRotationColumn(2).normalize().mult(0.006f + (((throttle > 0 ? throttle : 0) * maxSpeed ) / 100f)),
-                5f);
+                5f, "");
 
         bullet.setLocalRotation(this.getPhysicsRotation());
 

@@ -1,10 +1,13 @@
 package mygame.scene.character;
 
+import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
-import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
 import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.collision.shapes.CompoundCollisionShape;
-import com.jme3.bullet.control.RigidBodyControl;
+import com.jme3.bullet.collision.shapes.MeshCollisionShape;
+import com.jme3.bullet.control.GhostControl;
+import com.jme3.effect.ParticleEmitter;
+import com.jme3.effect.ParticleMesh;
 import com.jme3.input.InputManager;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
@@ -13,11 +16,20 @@ import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
-import com.jme3.renderer.Camera;
 import com.jme3.scene.Geometry;
+import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.function.Consumer;
 import mygame.game.Main;
+import mygame.scene.DestructibleGameObject;
+import mygame.util.Recursive;
 import org.lwjgl.input.Keyboard;
 
 /**
@@ -25,36 +37,59 @@ import org.lwjgl.input.Keyboard;
  *
  * @author Sameer Suri
  */
-public class ShipCharacterControl extends RigidBodyControl implements ActionListener
+public class ShipCharacterControl extends GhostControl implements ActionListener, DestructibleGameObject
 {
-
     // Constants describing the movement of the character
     static final float maxSpeed = .05f;
-    static final int throttleInc = 1;
-
-    // Constants describing the characteristics of the character's hitbox.
-    static float _radius = .6f,_height = 3.4f, xOffset = 0, yOffset = .1f, zOffset = 0;
+    static final int throttleInc = 5;
 
     private int throttle = 0;
 
-    // The instance of the JME camera class that we use to find out which way the player is looking.
-    @SuppressWarnings("FieldMayBeFinal")
-    protected Camera cam;
+    private String playerCode;
+
+    private ParticleEmitter trail;
 
     /**
      * Constructor for the control.
      * @param spatial The model used, so that the control can find the animations in the model
-     * @param cam The camera, so that the control can see where the player is looking
+     * @param playerCode The custom code that corresponds to this player
      */
-    public ShipCharacterControl(Spatial spatial, Camera cam)
+    public ShipCharacterControl(Spatial spatial, String playerCode)
     {
-        // Calls the rigid body constructor, which sets the mass for the physics engine
-        super(0f); // mass of 0 = do not handle gravity stuff
+        super();
 
-        setCollisionShape(generateShape());
+        setCollisionShape(generateShape(spatial));
 
-        // Stores the camera in an instance variable
-        this.cam = cam;
+        this.playerCode = playerCode;
+
+        ColorRGBA startColor, endColor;
+
+        if(playerCode.equals("")) //player 1
+        {
+            endColor = new ColorRGBA(1, 1, 0, 0f);
+            startColor = new ColorRGBA(1, 0, 0, 0.5f);
+        }
+        else // player 2
+        {
+            endColor = new ColorRGBA(0, 1, 1, 0f);
+            startColor = new ColorRGBA(0, 0, 1, 0.5f);
+        }
+
+        trail = new ParticleEmitter("Emitter", ParticleMesh.Type.Triangle, 30);
+        Material fireMat = new Material(Main.instance.getAssetManager(), "Common/MatDefs/Misc/Particle.j3md");
+        fireMat.setTexture("Texture", Main.instance.getAssetManager().loadTexture("Effects/Explosion/flash.png"));
+        trail.setMaterial(fireMat);
+        trail.setImagesX(2); trail.setImagesY(2);
+        trail.setEndColor(endColor);
+        trail.setStartColor(startColor);
+        trail.getParticleInfluencer().setInitialVelocity(new Vector3f(0, 2, 0));
+        trail.setStartSize(1f);
+        trail.setEndSize(0f);
+        trail.setGravity(0f,0f,0f);
+        trail.setLowLife(1.5f);
+        trail.setHighLife(.5f);
+        trail.getParticleInfluencer().setVelocityVariation(1f);
+        trail.setLocalTranslation(0, -1.25f, 0);
     }
 
     /**
@@ -67,16 +102,27 @@ public class ShipCharacterControl extends RigidBodyControl implements ActionList
     {
         // Binds keys to their respective actions
 
-        inputManager.addMapping("Throttle+", new KeyTrigger(Keyboard.KEY_W));
-        inputManager.addMapping("Throttle-", new KeyTrigger(Keyboard.KEY_S));
+        inputManager.addMapping("Throttle+" + playerCode, new KeyTrigger(Keyboard.KEY_W));
+        inputManager.addMapping("Throttle-" + playerCode, new KeyTrigger(Keyboard.KEY_S));
 
-        inputManager.addMapping("Shoot", new MouseButtonTrigger(MouseInput.BUTTON_LEFT), new KeyTrigger(Keyboard.KEY_SPACE));
+        inputManager.addMapping("Shoot" + playerCode, new MouseButtonTrigger(MouseInput.BUTTON_LEFT), new KeyTrigger(Keyboard.KEY_SPACE));
 
-        // Adds listeners for the action
-        // This allows 'this' object to be notified when one of the above set
-        // keys is pressed
-        inputManager.addListener(this, "Throttle+", "Throttle-", "Shoot");
-        
+        return this;
+    }
+
+    public ShipCharacterControl registerMappings(InputManager inputManager)
+    {
+        String[] mappings = new String[] {
+          "Throttle+",
+          "Throttle-",
+          "Shoot"
+        };
+
+        for(int i = 0; i < mappings.length; i++)
+            mappings[i] += playerCode;
+
+        inputManager.addListener(this, mappings);
+
         return this;
     }
 
@@ -84,20 +130,24 @@ public class ShipCharacterControl extends RigidBodyControl implements ActionList
     @Override
     public void onAction(String action, boolean isPressed, float tpf)
     {
-        switch(action)
+        if(matches(action, "Shoot") && isPressed)
         {
-            case "Shoot":
-                if(isPressed) makeBullet();
-                break;
-            case "Throttle+":
-                throttle += throttleInc * (isPressed ? 1 : 0);
-                break;
-            case "Throttle-":
-                throttle -= throttleInc * (isPressed ? 1 : 0);
-                break;
+            makeBullet();
+        }
+        else if(matches(action, "Throttle+") && isPressed)
+        {
+            throttle += throttleInc;
+        }
+        else if(matches(action, "Throttle-") && isPressed)
+        {
+            throttle -= throttleInc;
         }
     }
 
+    private boolean matches(String action, String toMatch)
+    {
+        return action.equals(toMatch) || action.equals(toMatch + playerCode);
+    }
     // Handles movement as the game goes on.
     @Override
     public void update(float tpf)
@@ -111,24 +161,54 @@ public class ShipCharacterControl extends RigidBodyControl implements ActionList
 
         this.spatial.setLocalTranslation(targetLocation);
 
-        System.out.println(throttle);
+       /* enables the trail if they are going fast enough */
+       if(spatial instanceof Node)
+       {
+           if(throttle > 0)
+           {
+                ((Node) spatial).attachChild(trail);
+           }
+           else
+           {
+               ((Node) spatial).detachChild(trail);
+           }
+       }
      }
 
-    public static CollisionShape generateShape()
+    public static CollisionShape generateShape(Spatial spatial)
     {
-        // Generates a collision shape for this.
-        // This does the exact same thing that the superclass does, but adds a height offset
-        // The parameteres for the collider are defined as the static constants in the class
-        CapsuleCollisionShape capsuleCollisionShape = new CapsuleCollisionShape(_radius, (_height - (2 * _radius)));
-        CompoundCollisionShape compoundCollisionShape = new CompoundCollisionShape();
-        Vector3f addLocation = new Vector3f(xOffset, (_height / 2.0f) + yOffset, zOffset);
-        compoundCollisionShape.addChildShape(capsuleCollisionShape, addLocation);
-        return compoundCollisionShape;
+        List<Geometry> geometries = new ArrayList<>();
+
+        Recursive<Consumer<Spatial>> findGeometries = new Recursive<>();
+
+        findGeometries.function = (sp) -> {
+            if(sp instanceof Geometry)
+            {
+                geometries.add((Geometry) sp);
+            }
+            else
+            {
+                for(Spatial child : ((Node) sp).getChildren()) findGeometries.function.accept(child);
+            }
+        };
+
+        findGeometries.function.accept(spatial);
+
+        CompoundCollisionShape shape = new CompoundCollisionShape();
+
+        for(Geometry geom : geometries)
+        {
+            shape.addChildShape(new MeshCollisionShape(geom.getMesh()), new Vector3f(.15f, -1.5f, -.5f));
+        }
+
+        return shape;
     }
 
     int bulletNum = 0;
     public void makeBullet()
     {
+        if(spatial == null) return;
+
         Vector3f size = new Vector3f(.1f, .05f, .4f);
 
         Geometry bullet = new Geometry("bullet" + bulletNum++, new Box(size.x, size.y, size.z));
@@ -141,10 +221,102 @@ public class ShipCharacterControl extends RigidBodyControl implements ActionList
 
         BulletControl bulletControl = new BulletControl(new BoxCollisionShape(size),
                 this.spatial.getLocalRotation().getRotationColumn(2).normalize().mult(0.010f + (((throttle > 0 ? throttle : 0) * maxSpeed ) / 100f)),
-                5f);
+                5f, playerCode);
 
         bullet.setLocalRotation(this.spatial.getLocalRotation());
 
         Main.instance.addSpatial(bullet, bulletControl);
+    }
+
+    @Override
+    public void destroyGameObject(Map<String, Object> data)
+    {
+        Main.instance.enqueue(() -> {
+            Main.instance.playerLoses(playerCode);
+
+            try
+            {
+                ColorRGBA startColor, endColor;
+
+                if(playerCode.equals("")) //player 1
+                {
+                    endColor = new ColorRGBA(1, 1, 0, 0f);
+                    startColor = new ColorRGBA(1, 0, 0, 0.5f);
+                }
+                else // player 2
+                {
+                    endColor = new ColorRGBA(0, 1, 1, 0f);
+                    startColor = new ColorRGBA(0, 0, 1, 0.5f);
+                }
+
+                ParticleEmitter fireEffect = new ParticleEmitter("Emitter", ParticleMesh.Type.Triangle, 30);
+                Material fireMat = new Material(Main.instance.getAssetManager(), "Common/MatDefs/Misc/Particle.j3md");
+                fireMat.setTexture("Texture", Main.instance.getAssetManager().loadTexture("Effects/Explosion/flame.png"));
+                fireEffect.setMaterial(fireMat);
+                fireEffect.setImagesX(2); fireEffect.setImagesY(2);
+                fireEffect.setEndColor(endColor);
+                fireEffect.setStartColor(startColor);
+                fireEffect.getParticleInfluencer().setInitialVelocity(new Vector3f(0, 2, 0));
+                fireEffect.setStartSize(3.6f);
+                fireEffect.setEndSize(0f);
+                fireEffect.setGravity(0f,0f,0f);
+                fireEffect.setLowLife(1.5f);
+                fireEffect.setHighLife(.5f);
+                fireEffect.setLocalTranslation(spatial.getLocalTranslation());
+                fireEffect.getParticleInfluencer().setVelocityVariation(1f);
+                Main.instance.getRootNode().attachChild(fireEffect);
+
+                ParticleEmitter debrisEffect = new ParticleEmitter("Debris", ParticleMesh.Type.Triangle, 10);
+                Material debrisMat = new Material(Main.instance.getAssetManager(), "Common/MatDefs/Misc/Particle.j3md");
+                debrisMat.setTexture("Texture", Main.instance.getAssetManager().loadTexture("Effects/Explosion/Debris.png"));
+                debrisEffect.setMaterial(debrisMat);
+                debrisEffect.setImagesX(3); debrisEffect.setImagesY(3);
+                debrisEffect.setRotateSpeed(4);
+                debrisEffect.setSelectRandomImage(true);
+                debrisEffect.getParticleInfluencer().setInitialVelocity(new Vector3f(0, 4, 0));
+                debrisEffect.setStartColor(new ColorRGBA(1f, 1f, 1f, 1f));
+                debrisEffect.setGravity(0f,6f,0f);
+                debrisEffect.setLocalTranslation(spatial.getLocalTranslation());
+                debrisEffect.getParticleInfluencer().setVelocityVariation(1f);
+                Main.instance.getRootNode().attachChild(debrisEffect);
+                debrisEffect.emitAllParticles();
+
+                Timer t = new Timer();
+                t.schedule(new TimerTask(){
+                    @Override
+                    public void run()
+                    {
+                        Main.instance.removeSpatial(fireEffect);
+                        Main.instance.removeSpatial(debrisEffect);
+                    }
+                }, 1500L);
+
+
+                spatial.removeFromParent();
+                Main.instance.getStateManager().getState(BulletAppState.class).getPhysicsSpace().remove(spatial);
+
+                spatial.removeControl(this);
+
+                spatial = null;
+            }
+            catch(NullPointerException npe) {}
+
+            return 0;
+        });
+    }
+
+    @Override
+    public boolean shouldBeDestroyed(Map<String, Object> data)
+    {
+        return !(data.getOrDefault("ObjectType", "No Type").equals("Bullet") &&
+                data.getOrDefault("PlayerCode", "No Code").equals(playerCode));
+    }
+
+    @Override
+    public Map<String, Object> getInfo()
+    {
+        HashMap info = new HashMap<>();
+        info.put("ObjectType", "Player");
+        return info;
     }
 }

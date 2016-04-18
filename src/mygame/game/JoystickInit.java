@@ -4,6 +4,7 @@ import com.jme3.input.CameraInput;
 import com.jme3.input.InputManager;
 import com.jme3.input.Joystick;
 import com.jme3.input.JoystickAxis;
+import com.jme3.input.JoystickButton;
 
 /**
  *
@@ -33,6 +34,9 @@ public abstract class JoystickInit
                 joystick.getAxis(JoystickAxis.Z_AXIS).assignAxis(CameraInput.CHASECAM_MOVERIGHT + suffix, CameraInput.CHASECAM_MOVELEFT + suffix);
                 joystick.getAxis(JoystickAxis.Z_ROTATION).assignAxis(CameraInput.CHASECAM_DOWN + suffix, CameraInput.CHASECAM_UP + suffix);
 
+                joystick.getButton(JoystickButton.BUTTON_4).assignButton("Throttle-" + suffix);
+                joystick.getButton(JoystickButton.BUTTON_5).assignButton("Throttle+" + suffix);
+                joystick.getButton(JoystickButton.BUTTON_2).assignButton("Shoot" + suffix);
             }
         }
         else
