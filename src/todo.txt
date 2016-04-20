@@ -1,0 +1,5 @@
+=======================================================
+TODO
+- Make planet models and add them to the game
+- Implement waypoint mechanics including HUD/GUI
+- 
