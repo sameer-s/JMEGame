@@ -8,6 +8,7 @@ import com.jme3.scene.VertexBuffer;
 import com.jme3.scene.shape.Sphere;
 import com.jme3.util.BufferUtils;
 import java.nio.FloatBuffer;
+import java.util.Arrays;
 import java.util.Random;
 import planetmeshgen.PlanetMeshGen;
 
@@ -32,19 +33,19 @@ public class PlanetGen
             float diff = 1;
             diff = pmg.heightmapData[i];
 
-
             diff *= 100;
-
             if(roughness != 0)
             {
 //                diff = (float) ((roughness * generator.nextGaussian()) + 1);
 //                vertices[i].multLocal(diff);
                 vertices[i].normalize();
                 vertices[i].multLocal(radius + diff);
+                vertices[i].multLocal(0.005f);
             }
 
 //            diff = (vertices[i].distance(Vector3f.ZERO)) / radius;
 
+//            System.out.println(diff);
 
             if(diff <= 1.005f)
             {
@@ -63,6 +64,8 @@ public class PlanetGen
                 colors[i] = new ColorRGBA(.5f, .5f, .5f, 1f);
             }
         }
+        
+        Arrays.stream(vertices).forEach(a->System.out.println(a));
 
         mesh.setBuffer(VertexBuffer.Type.Position, 3, BufferUtils.createFloatBuffer(vertices));
         mesh.setBuffer(VertexBuffer.Type.Color, 4, BufferUtils.createFloatBuffer(colors));
