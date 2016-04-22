@@ -24,7 +24,7 @@ public class PlanetMeshGen {
     // Width of heightmap
     protected int heightmapWidth;
     // Stores heightmap data
-    protected float heightmapData[];
+    public float heightmapData[];
 
     public PlanetMeshGen() {
 

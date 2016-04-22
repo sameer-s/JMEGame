@@ -5,6 +5,7 @@ import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
+import java.util.Random;
 
 public class TestPlanetGen extends SimpleApplication
 {
@@ -28,13 +29,10 @@ public class TestPlanetGen extends SimpleApplication
         sun.setDirection(new Vector3f(-0.1f, -0.7f, -1.0f));
         rootNode.addLight(sun);
 
+//      public PlanetGen(int zSamples, int radialSamples, float radius, Random generator)
+        PlanetGen planetGen = new PlanetGen(30, 30, 250, 0.5f, new Random());
         // Add planet
-        planet = new Geometry("Planet");
-
-        PlanetGen planetMeshGen = new PlanetGen();
-        //    public void generateHeightmap(int width, int seed, int numIslands, float islandRadius, int iterations, float displacement, float smoothing ) {
-        planetMeshGen.generateHeightmap(750, -1, 30, 90);
-        planet.setMesh(planetMeshGen.generateMesh());
+        planet = new Geometry("Planet", planetGen.getMesh());
 
         Material mat = new Material(this.getAssetManager(), "Common/MatDefs/Light/Lighting.j3md");
         mat.setBoolean("UseVertexColor", true);
@@ -44,10 +42,4 @@ public class TestPlanetGen extends SimpleApplication
         rootNode.attachChild(planet);
 
     }
-
-    @Override
-    public void simpleUpdate(float tpf) {
-        planet.rotate(0, 0.005f*tpf, 0);
-    }
-
 }
