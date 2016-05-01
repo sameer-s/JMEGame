@@ -27,7 +27,7 @@ public class PlanetGen
             heightmap = new HillHeightMap(750, 10, 10, 100, seed);
 
             PlanetMeshGen pmg = new PlanetMeshGen();
-            pmg.generateHeightmap();
+            pmg.generateHeightmap(heightmap.getSize(), (int) seed, 30, 90, 25000, .8f, .3f);
 
             final float[] hd = pmg.heightmapData;
 
@@ -65,39 +65,39 @@ public class PlanetGen
 
                 Vector3f vertex = getCoords(radius, phi, theta);
 
-                int p2 = p % heightmap.getSize();
-                int t2 = t % heightmap.getSize();
+                int p2 = p;
 
-                float height = heightmap.getHeightMap()[(p2 * heightmap.getSize()) + t2];
+                if(p2 >= heightmap.getSize())
+                {
+                    p2 = ((2 * heightmap.getSize()) - 1) - p2;
+                }
+
+                float height = heightmap.getHeightMap()[(p2 * heightmap.getSize()) + t];
 
                 vertex.normalizeLocal().multLocal(radius + height);
 
-                vertices[p * heightmap.getSize() + t] = vertex;
+                vertices[p * thetas + t] = vertex;
 
                 ColorRGBA color;
 
                 if(height < 1f)
                 {
-                    color = ColorRGBA.Blue;
-                    color = new ColorRGBA(0, .4f, .8f, 1);
+                    color = new ColorRGBA(0, .2f, .75f, 1);
                 }
                 else if(height < 1.5f)
                 {
-                    color = ColorRGBA.Brown;
-                    color = new ColorRGBA(.83f, .72f, .34f, 1);
+                    color = new ColorRGBA(.75f, .75f, .25f, 1);
                 }
                 else if(height < 10f)
                 {
-                    color = ColorRGBA.Green;
-                    color = new ColorRGBA(.2f, .6f, .1f, 1);
+                    color = new ColorRGBA(.1f, .75f, .1f, 1);
                 }
                 else
                 {
-                    color = ColorRGBA.Gray;
                     color = new ColorRGBA(.5f, .5f, .5f, 1);
                 }
 
-                colors[p * heightmap.getSize() + t] = color;
+                colors[p * thetas + t] = color;
             }
         }
 
@@ -130,7 +130,7 @@ public class PlanetGen
                          vertex3 = vertices[point3],
                          vertex4 = vertices[point4],
 
-                         diff1 = new Vector3f(), // vertex1 - vertex1
+                         diff1 = vertex1.subtract(vertex1),
                          diff2 = vertex2.subtract(vertex3),
                          diff3 = vertex3.subtract(vertex4),
                          diff4 = vertex4.subtract(vertex1),
@@ -140,7 +140,7 @@ public class PlanetGen
                          normal3 = diff3.cross(diff4).normalize(),
                          normal4 = diff4.cross(diff1).normalize();
 
-                normals[p * heightmap.getSize() + t] = normal1.add(normal2).add(normal3).add(normal4).normalize();
+                normals[p * thetas + t] = normal1.add(normal2).add(normal3).add(normal4).normalize();
             }
         }
 
@@ -148,6 +148,7 @@ public class PlanetGen
         mesh.setBuffer(VertexBuffer.Type.Color, 4, BufferUtils.createFloatBuffer(colors));
         mesh.setBuffer(VertexBuffer.Type.Index, 1, BufferUtils.createIntBuffer(indices));
         mesh.setBuffer(VertexBuffer.Type.Normal, 3, BufferUtils.createFloatBuffer(normals));
+        mesh.updateBound();
     }
 
 

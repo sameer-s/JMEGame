@@ -34,7 +34,7 @@ public class TestPlanetGen extends SimpleApplication
 
         // Add sun
         DirectionalLight sun = new DirectionalLight();
-        sun.setDirection(new Vector3f(0.1f, 0.7f, 1.0f));
+        sun.setDirection(new Vector3f(-0.1f, -0.7f, -1.0f));
         AmbientLight al = new AmbientLight();
         al.setColor(ColorRGBA.White.mult(0.2f));
 
@@ -52,7 +52,7 @@ public class TestPlanetGen extends SimpleApplication
         Material mat = new Material(this.getAssetManager(), "Common/MatDefs/Light/Lighting.j3md");
         mat.setBoolean("UseVertexColor", true);
         mat.getAdditionalRenderState().setFaceCullMode(RenderState.FaceCullMode.Off);
-        mat.getAdditionalRenderState().setWireframe(true);
+//        mat.getAdditionalRenderState().setWireframe(true);
 
 
         planet.setMaterial(mat);
