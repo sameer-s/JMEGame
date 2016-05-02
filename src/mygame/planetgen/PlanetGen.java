@@ -5,9 +5,11 @@ import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.VertexBuffer;
+import com.jme3.scene.shape.Box;
 import com.jme3.terrain.heightmap.AbstractHeightMap;
 import com.jme3.terrain.heightmap.HillHeightMap;
 import com.jme3.util.BufferUtils;
+import java.nio.FloatBuffer;
 import planetmeshgen.PlanetMeshGen;
 
 public class PlanetGen
@@ -16,18 +18,28 @@ public class PlanetGen
 
     public PlanetGen(float radius, long seed)
     {
-        mesh = new Mesh();
-
-        AbstractHeightMap heightmap = null;
-
         radius = 250;
 
+        final float boxWidth = FastMath.sqrt((radius * radius) / 2);
+        mesh = new Box(boxWidth / 2, boxWidth / 2, boxWidth / 2);
+
+        Vector3f[] vertices = BufferUtils.getVector3Array((FloatBuffer) mesh.getBuffer(VertexBuffer.Type.Position).getData());
+
+        for(Vector3f vertex : vertices)
+        {
+            vertex.multLocal(radius / vertex.distance(Vector3f.ZERO));
+        }
+
+        AbstractHeightMap heightmap;
         try
         {
-            heightmap = new HillHeightMap(750, 10, 10, 100, seed);
+            int size = (int) Math.ceil((1 + FastMath.sqrt(1 + (8 * vertices.length))) / 4f);
+
+            System.out.println(vertices.length + " "  + size);
+            heightmap = new HillHeightMap(size, 10, 10, 100, seed);
 
             PlanetMeshGen pmg = new PlanetMeshGen();
-            pmg.generateHeightmap(heightmap.getSize(), (int) seed, 30, 90, 25000, .8f, .3f);
+            pmg.generateHeightmap(size, (int) seed, 30, 90, 25000, .8f, .3f);
 
             final float[] hd = pmg.heightmapData;
 
@@ -44,16 +56,15 @@ public class PlanetGen
             throw new RuntimeException(e);
         }
 
+        ColorRGBA[] colors = new ColorRGBA[vertices.length];
+        int[] indices = new int[vertices.length * 6];
+        Vector3f[] normals = new Vector3f[vertices.length];
+
         int phis = 2 * (heightmap.getSize() - 1);
         int thetas = heightmap.getSize();
 
         float phiStep = FastMath.PI / (thetas - 1);
         float thetaStep = FastMath.TWO_PI / phis;
-
-        Vector3f[] vertices = new Vector3f[phis * thetas];
-        ColorRGBA[] colors = new ColorRGBA[phis * thetas];
-        int[] indices = new int[phis * thetas * 6];
-        Vector3f[] normals = new Vector3f[phis * thetas];
 
         for(int p = 0; p < phis; p++)
         {
