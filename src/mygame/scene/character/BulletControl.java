@@ -5,7 +5,7 @@ import com.jme3.bullet.control.GhostControl;
 import com.jme3.math.Vector3f;
 import java.util.HashMap;
 import java.util.Map;
-import mygame.game.Main;
+import mygame.game.PlanetMain_Buggy;
 import mygame.scene.DestructibleGameObject;
 
 /**
@@ -57,7 +57,7 @@ public class BulletControl extends GhostControl implements DestructibleGameObjec
 
         if(ttl <= 0)
         {
-            Main.instance.removeSpatial(spatial);
+            PlanetMain_Buggy.instance.removeSpatial(spatial);
         }
 
         this.spatial.setLocalTranslation(this.spatial.getLocalTranslation().add(movementVector));

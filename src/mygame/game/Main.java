@@ -6,9 +6,11 @@ import com.jme3.app.state.AppState;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.control.PhysicsControl;
+import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.font.BitmapText;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
+import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
@@ -26,6 +28,11 @@ import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.util.HashMap;
 import java.util.Random;
+import jmeplanet.FractalDataSource;
+import jmeplanet.Planet;
+import jmeplanet.PlanetAppState;
+import jmeplanet.PlanetCollisionShape;
+import jmeplanet.test.Utility;
 import mygame.debug.DebugLogger;
 import mygame.scene.DestructibleCollisionListener;
 import mygame.scene.DestructibleGhost;
@@ -92,7 +99,7 @@ public class Main extends SimpleApplication implements ActionListener
         inputManager.setCursorVisible(false);
 
         Node player1Node = new Node();
-        Spatial player1Model = assetManager.loadModel(SHIP_MODEL);
+    Spatial player1Model = assetManager.loadModel(SHIP_MODEL);
         player1Model.setLocalTranslation(0, -2.5f, 0);
         player1Model.setName("Player1");
         player1Node.attachChild(player1Model);
@@ -122,6 +129,7 @@ public class Main extends SimpleApplication implements ActionListener
         }
         inputManager.addListener(player2Cam, player2Cam.movementActions);
 
+        /*
         for(int i = 0; i < 25; i++)
         {
             Geometry geom = new Geometry("BlueBox" + i, new Box(1f, 1f, 1f));
@@ -134,7 +142,21 @@ public class Main extends SimpleApplication implements ActionListener
             rootNode.attachChild(geom);
             stateManager.getState(BulletAppState.class).getPhysicsSpace().add(geom);
         }
-
+        */
+        DirectionalLight sun = new DirectionalLight();
+        sun.setColor(new ColorRGBA(0.45f,0.45f,0.35f,1.0f));
+        sun.setDirection(new Vector3f(1f, -1f, 0f));
+        rootNode.addLight(sun);
+        
+        FractalDataSource planetDataSource = new FractalDataSource(4);
+        planetDataSource.setHeightScale(800f);
+        Planet planet = Utility.createEarthLikePlanet(getAssetManager(), 63710.0f, null, planetDataSource);
+        planet.addControl(new RigidBodyControl(new PlanetCollisionShape(planet.getLocalTranslation(), planet.getRadius(), planetDataSource), 0f));
+//        planetAppState.addPlanet(planet);
+        planet.setLocalTranslation(0, 0, 0);
+        rootNode.attachChild(planet);
+        bulletAppState.getPhysicsSpace().add(planet);
+        
         rootNode.attachChild(SkyFactory.createSky(assetManager, "Textures/Starfield.dds", EnvMapType.CubeMap));
 
         inputManager.addMapping("MouseFocus", new KeyTrigger(Keyboard.KEY_X));
@@ -201,7 +223,7 @@ public class Main extends SimpleApplication implements ActionListener
 
     @Override
     public void simpleUpdate(float tpf)
-    {
+    {   
         int winner = loser == null ? 0 : (loser.equals("") ? 2 : 1);
         getText("P1Score").setText("Score: " + winner % 2);
         getText("P2Score").setText("Score: " + winner / 2);
