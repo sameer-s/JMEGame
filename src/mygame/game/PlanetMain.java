@@ -27,6 +27,7 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.app.StatsAppState;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.collision.shapes.SphereCollisionShape;
+import com.jme3.bullet.control.PhysicsControl;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.system.AppSettings;
 import com.jme3.light.DirectionalLight;
@@ -46,12 +47,15 @@ import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.control.CameraControl;
 import com.jme3.scene.control.CameraControl.ControlDirection;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import jmeplanet.Planet;
 import jmeplanet.FractalDataSource;
 import jmeplanet.PlanetAppState;
 import jmeplanet.PlanetCollisionShape;
+import mygame.scene.character.FollowControl;
 
 /**
  * PlanetPhysicsTest
@@ -66,6 +70,10 @@ public class PlanetMain extends SimpleApplication {
     private boolean physicsDebug = false;
     private float linearSpeed = 10000f;
     private float angularSpeed = 50f;
+    
+    private List<PhysicsControl> toUpdate = new ArrayList<>();
+    
+    private RigidBodyControl shipControl;
     
     private static final String SHIP_MODEL = "Models/ship/SpaceShip.j3o";
 //    private static final String SHIP_MODEL = "Models/Jaime/Jaime.j3o";
@@ -104,9 +112,22 @@ public class PlanetMain extends SimpleApplication {
         cameraNode.rotate(0, FastMath.PI, 0);
         cameraNodePhysicsControl = new RigidBodyControl(new SphereCollisionShape(2.5f), 1f);
         cameraNode.addControl(cameraNodePhysicsControl);
+        
         Spatial playerModel = assetManager.loadModel(SHIP_MODEL);
-        cameraNode.attachChild(playerModel);
-        playerModel.setLocalTranslation(0, -2, 7);
+        if(true)
+        {
+            playerModel.setLocalTranslation(cameraNode.getLocalTranslation());
+            FollowControl fc = new FollowControl(cameraNode, 0, -2, 7);
+            toUpdate.add(fc);
+            playerModel.addControl(fc);
+            rootNode.attachChild(playerModel);
+        }
+        else
+        {
+            playerModel.setLocalTranslation(0, -2, 7);
+            cameraNode.attachChild(playerModel);  
+        }
+        
         rootNode.attachChild(cameraNode);
         bulletAppState.getPhysicsSpace().add(cameraNode);
         cameraNodePhysicsControl.setAngularFactor(0);
@@ -161,6 +182,8 @@ public class PlanetMain extends SimpleApplication {
         if (planet != null && planet.getPlanetToCamera() != null) {
             cameraNodePhysicsControl.setGravity(planet.getPlanetToCamera().normalize().mult(-100f));
         }   
+        
+        toUpdate.stream().forEach(pc -> pc.update(tpf));
     }
     
     private void setupInput() {

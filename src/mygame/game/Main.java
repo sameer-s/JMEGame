@@ -4,22 +4,18 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.app.StatsAppState;
 import com.jme3.app.state.AppState;
 import com.jme3.bullet.BulletAppState;
-import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.control.PhysicsControl;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.font.BitmapText;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.light.DirectionalLight;
-import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
 import com.jme3.renderer.ViewPort;
-import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import com.jme3.scene.shape.Box;
 import com.jme3.system.AppSettings;
 import com.jme3.ui.Picture;
 import com.jme3.util.SkyFactory;
@@ -27,15 +23,12 @@ import com.jme3.util.SkyFactory.EnvMapType;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.util.HashMap;
-import java.util.Random;
 import jmeplanet.FractalDataSource;
 import jmeplanet.Planet;
-import jmeplanet.PlanetAppState;
 import jmeplanet.PlanetCollisionShape;
 import jmeplanet.test.Utility;
 import mygame.debug.DebugLogger;
 import mygame.scene.DestructibleCollisionListener;
-import mygame.scene.DestructibleGhost;
 import mygame.scene.character.RotationLockedChaseCamera;
 import mygame.scene.character.ShipCharacterControl;
 import org.lwjgl.input.Keyboard;
@@ -60,6 +53,7 @@ public class Main extends SimpleApplication implements ActionListener
 
     private static final String SHIP_MODEL = "Models/ship/SpaceShip.j3o";
 
+    @SuppressWarnings("FieldMayBeFinal")
     private HashMap<String, Spatial> guiElements = new HashMap<>();
 
     private String loser = null;
