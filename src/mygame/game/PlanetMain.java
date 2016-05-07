@@ -27,7 +27,6 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.app.StatsAppState;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.collision.shapes.SphereCollisionShape;
-import com.jme3.bullet.control.PhysicsControl;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.system.AppSettings;
 import com.jme3.light.DirectionalLight;
@@ -39,23 +38,23 @@ import com.jme3.input.controls.AnalogListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
-import com.jme3.light.AmbientLight;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.scene.CameraNode;
-import com.jme3.scene.Node;
-import com.jme3.scene.Spatial;
 import com.jme3.scene.control.CameraControl;
 import com.jme3.scene.control.CameraControl.ControlDirection;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Random;
+import javax.swing.JOptionPane;
 
 import jmeplanet.Planet;
 import jmeplanet.FractalDataSource;
 import jmeplanet.PlanetAppState;
 import jmeplanet.PlanetCollisionShape;
-import mygame.scene.character.FollowControl;
+import mygame.util.Configuration;
 
 /**
  * PlanetPhysicsTest
@@ -71,21 +70,62 @@ public class PlanetMain extends SimpleApplication {
     private float linearSpeed = 10000f;
     private float angularSpeed = 50f;
     
-    private List<PhysicsControl> toUpdate = new ArrayList<>();
+    private Configuration config;
     
-    private RigidBodyControl shipControl;
-    
-    private static final String SHIP_MODEL = "Models/ship/SpaceShip.j3o";
-//    private static final String SHIP_MODEL = "Models/Jaime/Jaime.j3o";
-
-    public static void main(String[] args){
-        AppSettings settings = new AppSettings(true);
-        settings.setResolution(1024,768);
+    public static void main(String[] args)
+    {
         PlanetMain app = new PlanetMain();
         
+        File file = new File("out/game.cfg");
+        if(file.canRead())
+        {
+            FileReader in = null;
+            try
+            {
+                in = new FileReader(file);
+                
+                StringBuilder sb = new StringBuilder();
+                for(int character = 0; character != -1; character = in.read())
+                {
+                    sb.append((char) character);
+                }
+                
+                app.config = Configuration.deserialize(sb.toString());
+            }
+            catch(IOException e)
+            {
+                e.printStackTrace(System.err);
+            }
+            finally
+            {
+                try
+                {
+                    if(in != null) in.close();
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace(System.err);
+                }
+                }
+        }
+        else
+        {
+            popup("Configuration file does not exist or is not readable. Assuming default config...");
+            app.config = new Configuration();
+        }
+        
+        AppSettings settings = new AppSettings(true);
+        settings.setResolution(app.config.width, app.config.height);
+        settings.setSamples(app.config.samples);
+        settings.setFullscreen(app.config.fullscreen);
         app.setSettings(settings);
-        app.showSettings = true;
+        app.showSettings = false;
         app.start();
+    }
+    
+    private static void popup(String message)
+    {
+        JOptionPane.showMessageDialog(null, message);
     }
     
     public PlanetMain() {
@@ -101,7 +141,8 @@ public class PlanetMain extends SimpleApplication {
         bulletAppState = new BulletAppState();
         stateManager.attach(bulletAppState);
         bulletAppState.getPhysicsSpace().setGravity(Vector3f.ZERO);
-        
+        bulletAppState.getPhysicsSpace().setAccuracy(1f/((float) config.physicsAccuracy));
+         
         // setup input
         setupInput();
         
@@ -112,22 +153,6 @@ public class PlanetMain extends SimpleApplication {
         cameraNode.rotate(0, FastMath.PI, 0);
         cameraNodePhysicsControl = new RigidBodyControl(new SphereCollisionShape(2.5f), 1f);
         cameraNode.addControl(cameraNodePhysicsControl);
-        
-        Spatial playerModel = assetManager.loadModel(SHIP_MODEL);
-        if(true)
-        {
-            playerModel.setLocalTranslation(cameraNode.getLocalTranslation());
-            FollowControl fc = new FollowControl(cameraNode, 0, -2, 7);
-            toUpdate.add(fc);
-            playerModel.addControl(fc);
-            rootNode.attachChild(playerModel);
-        }
-        else
-        {
-            playerModel.setLocalTranslation(0, -2, 7);
-            cameraNode.attachChild(playerModel);  
-        }
-        
         rootNode.attachChild(cameraNode);
         bulletAppState.getPhysicsSpace().add(cameraNode);
         cameraNodePhysicsControl.setAngularFactor(0);
@@ -138,16 +163,8 @@ public class PlanetMain extends SimpleApplication {
         DirectionalLight sun = new DirectionalLight();
         sun.setColor(new ColorRGBA(0.45f,0.45f,0.35f,1.0f));
         sun.setDirection(new Vector3f(1f, -1f, 0f));
+        
         rootNode.addLight(sun);
-        
-        AmbientLight ambient = new AmbientLight();
-        ambient.setColor(ColorRGBA.White.mult(0.3f));
-        rootNode.addLight(ambient); 
-        
-        // Add sky
-        Node sceneNode = new Node("Scene");
-        sceneNode.attachChild(Utility.createSkyBox(this.getAssetManager(), "Textures/blue-glow-1024.dds"));
-        rootNode.attachChild(sceneNode);
         
         // Add planet app state
         planetAppState = new PlanetAppState(rootNode, sun);
@@ -165,7 +182,7 @@ public class PlanetMain extends SimpleApplication {
         bulletAppState.getPhysicsSpace().add(planet);
         
         // Add moon
-        FractalDataSource moonDataSource = new FractalDataSource(5);
+        FractalDataSource moonDataSource = new FractalDataSource(r.nextInt(Integer.MAX_VALUE));
         moonDataSource.setHeightScale(300f);
         Planet moon = Utility.createMoonLikePlanet(getAssetManager(), 10000, moonDataSource);
         moon.setLocalTranslation(-100000f, 0f, 0f);
@@ -180,10 +197,58 @@ public class PlanetMain extends SimpleApplication {
     public void simpleUpdate(float tpf) {
         Planet planet = planetAppState.getNearestPlanet();
         if (planet != null && planet.getPlanetToCamera() != null) {
-            cameraNodePhysicsControl.setGravity(planet.getPlanetToCamera().normalize().mult(-100f));
+//            cameraNodePhysicsControl.setGravity(planet.getPlanetToCamera().normalize().mult(-100f));
+            
+            if(linearSpeed == 100) return;
+            // uses a quadratic equation (y = -x^2 + 5) to convert the distance from the planet into a coefficient
+            // the coefficient is clamped between 1 and 3
+            // this is used to get a decreased speed closer to the planet but higher in deep space
+            float distanceMod = FastMath.clamp(-(planet.getDistanceToCamera() * planet.getDistanceToCamera()) + 5, 1, 3);
+            linearSpeed = FastMath.clamp(distanceMod * planet.getDistanceToCamera(), 6000, 100000);
+            System.out.println(linearSpeed);
         }   
-        
-        toUpdate.stream().forEach(pc -> pc.update(tpf));
+    }
+    
+    @Override
+    public void stop()
+    {
+        super.stop();
+       
+        File file = new File("out/game.cfg");
+        try
+        {
+            file.createNewFile();
+        }
+        catch(IOException e)
+        {
+            e.printStackTrace(System.err);
+        }
+          
+        if(file.canWrite())
+        {
+            FileWriter out = null;
+            try
+            {
+                out = new FileWriter(file);
+                
+                out.write(config.serialize());
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace(System.err);
+            }
+            finally
+            {
+                try
+                {
+                    if(out != null) out.close();
+                }
+                catch(IOException e)
+                {
+                    e.printStackTrace(System.err);
+                }
+            }
+        }
     }
     
     private void setupInput() {
@@ -195,9 +260,6 @@ public class PlanetMain extends SimpleApplication {
         inputManager.addMapping("TOGGLE_WIREFRAME", new KeyTrigger(KeyInput.KEY_T));
         // Toggle physics view
         inputManager.addMapping("TOGGLE_PHYSICS_DEBUG", new KeyTrigger(KeyInput.KEY_P));
-        // Linear speed
-        inputManager.addMapping("SpeedUp", new KeyTrigger(KeyInput.KEY_PGUP));
-        inputManager.addMapping("SpeedDown", new KeyTrigger(KeyInput.KEY_PGDN));
         // Movement keys
         inputManager.addMapping("RotateLeft", new MouseAxisTrigger(MouseInput.AXIS_X, true),
                                                new KeyTrigger(KeyInput.KEY_LEFT));
@@ -215,8 +277,10 @@ public class PlanetMain extends SimpleApplication {
         inputManager.addMapping("MoveRight", new KeyTrigger(KeyInput.KEY_D));
         inputManager.addMapping("MoveForward", new KeyTrigger(KeyInput.KEY_W));
         inputManager.addMapping("MoveBackward", new KeyTrigger(KeyInput.KEY_S));
-        inputManager.addListener(actionListener, "TOGGLE_WIREFRAME", "TOGGLE_CURSOR", "TOGGLE_PHYSICS_DEBUG","SpeedUp","SpeedDown");
+        inputManager.addListener(actionListener, "TOGGLE_WIREFRAME", "TOGGLE_CURSOR", "TOGGLE_PHYSICS_DEBUG");
         inputManager.addListener(analogListener, "MoveLeft","MoveRight","MoveForward","MoveBackward","RotateLeft","RotateRight","RotateUp","RotateDown","SpinLeft","SpinRight" );          
+   
+        inputManager.setCursorVisible(false);
     }
     
     private ActionListener actionListener = new ActionListener(){
@@ -249,28 +313,6 @@ public class PlanetMain extends SimpleApplication {
                     physicsDebug = false;
                 }
             }
-            if (name.equals("SpeedUp") && !pressed) {
-                if (linearSpeed >= 1000) {
-                    linearSpeed += 1000;
-                } else {
-                    linearSpeed += 100;
-                }
-                if (linearSpeed > 100000) {
-                    linearSpeed = 100000;
-                }
-                System.out.println("Speed:" + linearSpeed);
-            }
-            if (name.equals("SpeedDown") && !pressed) {
-                if (linearSpeed <= 1000) {  
-                    linearSpeed -= 100;
-                } else {
-                    linearSpeed -= 1000;
-                }
-                if (linearSpeed < 100) {
-                    linearSpeed = 100;
-                }
-                System.out.println("Speed:" + linearSpeed);
-            }  
         }
     };
     

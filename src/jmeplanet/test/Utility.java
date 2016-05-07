@@ -29,14 +29,12 @@ import com.jme3.material.Material;
 import com.jme3.material.RenderState.BlendMode;
 import com.jme3.math.FastMath;
 import com.jme3.math.ColorRGBA;
-import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.queue.RenderQueue.Bucket;
 import com.jme3.renderer.queue.RenderQueue.ShadowMode;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.debug.Grid;
-import com.jme3.scene.shape.Quad;
 import com.jme3.scene.shape.Sphere;
 import com.jme3.texture.Image;
 import com.jme3.texture.Texture;
@@ -93,7 +91,8 @@ public class Utility {
         sky.setShadowMode(ShadowMode.Off);
         sky.setModelBound(new BoundingSphere(Float.POSITIVE_INFINITY, Vector3f.ZERO));
 
-        Image cube = assetManager.loadTexture("Textures/blue-glow-1024.dds").getImage();
+//        Image cube = assetManager.loadTexture("Textures/blue-glow-1024.dds").getImage();
+        Image cube = assetManager.loadTexture(textureName).getImage();
         TextureCubeMap cubemap = new TextureCubeMap(cube);
 
         Material mat = new Material(assetManager, "Common/MatDefs/Misc/Sky.j3md");
@@ -192,7 +191,7 @@ public class Utility {
         Texture rock = assetManager.loadTexture("Textures/rock.jpg");
         rock.setWrap(Texture.WrapMode.Repeat);
         planetMaterial.setTexture("SlopeColorMap", rock);
-           
+                   
         // create planet
         Planet planet = new Planet("Moon", radius, planetMaterial, dataSource);
         
