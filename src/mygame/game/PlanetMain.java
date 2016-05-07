@@ -85,7 +85,7 @@ public class PlanetMain extends SimpleApplication {
                 in = new FileReader(file);
                 
                 StringBuilder sb = new StringBuilder();
-                for(int character = 0; character != -1; character = in.read())
+                for(int character = in.read(); character != -1; character = in.read())
                 {
                     sb.append((char) character);
                 }
@@ -106,7 +106,7 @@ public class PlanetMain extends SimpleApplication {
                 {
                     e.printStackTrace(System.err);
                 }
-                }
+            }
         }
         else
         {
