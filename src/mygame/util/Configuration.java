@@ -14,7 +14,6 @@ public class Configuration
     public int physicsAccuracy = 600;
     public int samples = 0;
     public boolean fullscreen = false;
-    private String[] strings = {"1", "2", "3"};
     
     public Configuration() {}
     

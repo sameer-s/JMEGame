@@ -16,6 +16,7 @@ import com.jme3.util.BufferUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.IntBinaryOperator;
+import java.util.stream.Stream;
 import mygame.util.SphereMath;
 
 /**
@@ -60,6 +61,7 @@ public class Planet extends Geometry
 //                colors.add(new ColorRGBA(cVal, 0f, 1 - cVal, 1f));  
 
                 colors.add(color.getColor(adjustedRadius, radius));
+                
             }
         }
        
@@ -84,8 +86,8 @@ public class Planet extends Geometry
                 }
                 else
                 {
-                    i3 = phiIter + p + 1;
-                    i4 = phiIter;
+                    i3 %= thetaIter * phiIter;
+                    i4 %= thetaIter * phiIter;
                 }
                 
                 Vector3f v1 = vertices.get(i1);
@@ -143,7 +145,7 @@ public class Planet extends Geometry
 
     public void addDebugTriggers(InputManager man, Trigger... triggers)
     {
-        man.addListener((ActionListener)(actionName, isPressed, tpf) -> { if(name.equals(PLANET_DEBUG_ACTION_NAME) && isPressed) toggleDebug(); }, PLANET_DEBUG_ACTION_NAME);
+        man.addListener((ActionListener)(name, isPressed, tpf) -> {if(name.equals(PLANET_DEBUG_ACTION_NAME) && isPressed) toggleDebug(); }, PLANET_DEBUG_ACTION_NAME);
         man.addMapping(PLANET_DEBUG_ACTION_NAME, triggers);
     }
     
