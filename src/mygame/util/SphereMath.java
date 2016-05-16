@@ -1,4 +1,4 @@
-package planetmeshgen;
+package mygame.util;
 
 import static com.jme3.math.FastMath.cos;
 import static com.jme3.math.FastMath.sin;

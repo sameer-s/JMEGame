@@ -5,7 +5,7 @@ import com.jme3.math.Vector3f;
 import com.jme3.terrain.heightmap.AbstractHeightMap;
 import static com.jme3.math.FastMath.atan2;
 import static com.jme3.math.FastMath.asin;
-import planetmeshgen.SphereMath;
+import mygame.util.SphereMath;
 
 /**
  *
@@ -19,12 +19,12 @@ public interface DataSource
     
     public default float getPrecision(boolean horizontal)
     {
-        return FastMath.PI / 128;
+        return FastMath.PI / 256;
     }
     
     public static final DataSource FLAT = (phi, theta, baseRadius) -> baseRadius;
     
-    public static DataSource HEIGHTMAP(AbstractHeightMap map, int modulation)
+    public static DataSource HEIGHTMAP(AbstractHeightMap map, float modulation)
     {
         return new DataSource()
         {
