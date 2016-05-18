@@ -37,27 +37,33 @@ public class Planet extends Geometry
         
         mesh = new Mesh();
         
-        final float hPrecision = source.getPrecision(true);
+        final float n = source.getPrecision(true);
         final float vPrecision = source.getPrecision(false);
         
         List<Vector3f> vertices = new ArrayList<>();
         List<ColorRGBA> colors = new ArrayList<>();
         List<Integer> indices = new ArrayList<>();
         List<Vector3f> normals = new ArrayList<>();
-        
-        final int thetaIter = (int) (FastMath.TWO_PI / hPrecision);
-        final int phiIter = (int) (FastMath.PI / vPrecision);           
        
-        final float a = (1 - vPrecision) / FastMath.sqr(FastMath.PI);
-        UnaryOperator<Float> getHPrecision = (phi) -> ((a)*(phi)*(phi)) + vPrecision;
+        final float a = (4 - 4*n) / FastMath.sqr(FastMath.PI);
+        final float b = (4*n - 4) / FastMath.PI;
+        UnaryOperator<Float> getHPrecision = (phi) -> (a * phi * phi) + (b * phi) + 1;
         
         // Defines a function for converting a theta and phi index into one overall index
 //        IntBinaryOperator getIndex = (t, p) -> (t * phiIter) + p;
         IntBinaryOperator getIndex = (t, p) -> {
             int sum = 0;
+            for(float phi = 0; phi < FastMath.PI - vPrecision; phi += vPrecision)
+            {
+                sum += (int) FastMath.ceil(FastMath.TWO_PI / getHPrecision.apply(phi));
+            }
             return sum;
         };
        
+        final int thetaIter = (int) (FastMath.PI / n);
+        if(Math.random() < 2) throw new RuntimeException("TODO");
+        
+        final int phiIter = (int) (FastMath.PI / vPrecision);           
 
         for(float phi = 0; phi < FastMath.PI; phi += vPrecision)
         {
@@ -100,7 +106,7 @@ public class Planet extends Geometry
                     i4 = 0;
                 }
                 
-                System.out.println(p + " " + i1 + " " + i2 + " " + i3 + " " + i4 + " ");
+                                                                                                                                                ut.println(p + " " + i1 + " " + i2 + " " + i3 + " " + i4 + " ");
                 Vector3f v1 = vertices.get(i1);
                 Vector3f v2 = vertices.get(i2);
                 Vector3f v3 = vertices.get(i3);
