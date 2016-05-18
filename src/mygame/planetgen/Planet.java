@@ -15,8 +15,10 @@ import com.jme3.scene.VertexBuffer;
 import com.jme3.util.BufferUtils;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.IntBinaryOperator;
-import java.util.stream.Stream;
+import java.util.function.IntSupplier;
+import java.util.function.UnaryOperator;
 import mygame.util.SphereMath;
 
 /**
@@ -35,8 +37,8 @@ public class Planet extends Geometry
         
         mesh = new Mesh();
         
-        float hPrecision = source.getPrecision(true);
-        float vPrecision = source.getPrecision(false);
+        final float hPrecision = source.getPrecision(true);
+        final float vPrecision = source.getPrecision(false);
         
         List<Vector3f> vertices = new ArrayList<>();
         List<ColorRGBA> colors = new ArrayList<>();
@@ -45,13 +47,21 @@ public class Planet extends Geometry
         
         final int thetaIter = (int) (FastMath.TWO_PI / hPrecision);
         final int phiIter = (int) (FastMath.PI / vPrecision);           
+       
+        final float a = (1 - vPrecision) / FastMath.sqr(FastMath.PI);
+        UnaryOperator<Float> getHPrecision = (phi) -> ((a)*(phi)*(phi)) + vPrecision;
         
         // Defines a function for converting a theta and phi index into one overall index
-        IntBinaryOperator getIndex = (t, p) -> (t * phiIter) + p;
-        
-        for(float theta = 0; theta < FastMath.TWO_PI; theta += hPrecision)
+//        IntBinaryOperator getIndex = (t, p) -> (t * phiIter) + p;
+        IntBinaryOperator getIndex = (t, p) -> {
+            int sum = 0;
+            return sum;
+        };
+       
+
+        for(float phi = 0; phi < FastMath.PI; phi += vPrecision)
         {
-            for(float phi = 0; phi < FastMath.PI; phi += vPrecision)
+            for(float theta = 0; theta < FastMath.TWO_PI; theta += getHPrecision.apply(theta))
             {
                 final float adjustedRadius = source.getRadius(phi, theta, radius);
                 vertices.add(SphereMath.getCoords(phi, theta, adjustedRadius));
@@ -74,7 +84,7 @@ public class Planet extends Geometry
                 int i2 = getIndex.applyAsInt((t + 1) % thetaIter, p);
                 int i3 = getIndex.applyAsInt((t + 1) % thetaIter, p + 1);
                 int i4 = getIndex.applyAsInt(t, p + 1);
-                
+                   
                 if(p != phiIter - 1)
                 {
                     indices.add(i1);
@@ -86,10 +96,11 @@ public class Planet extends Geometry
                 }
                 else
                 {
-                    i3 %= thetaIter * phiIter;
-                    i4 %= thetaIter * phiIter;
+                    i3 = 1;
+                    i4 = 0;
                 }
                 
+                System.out.println(p + " " + i1 + " " + i2 + " " + i3 + " " + i4 + " ");
                 Vector3f v1 = vertices.get(i1);
                 Vector3f v2 = vertices.get(i2);
                 Vector3f v3 = vertices.get(i3);
@@ -145,7 +156,7 @@ public class Planet extends Geometry
 
     public void addDebugTriggers(InputManager man, Trigger... triggers)
     {
-        man.addListener((ActionListener)(name, isPressed, tpf) -> {if(name.equals(PLANET_DEBUG_ACTION_NAME) && isPressed) toggleDebug(); }, PLANET_DEBUG_ACTION_NAME);
+        man.addListener((ActionListener)(actionName, isPressed, tpf) -> {if(actionName.equals(PLANET_DEBUG_ACTION_NAME) && isPressed) toggleDebug(); }, PLANET_DEBUG_ACTION_NAME);
         man.addMapping(PLANET_DEBUG_ACTION_NAME, triggers);
     }
     

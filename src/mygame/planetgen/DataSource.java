@@ -19,7 +19,7 @@ public interface DataSource
     
     public default float getPrecision(boolean horizontal)
     {
-        return FastMath.PI / 256;
+        return FastMath.PI / 64;
     }
     
     public static final DataSource FLAT = (phi, theta, baseRadius) -> baseRadius;
