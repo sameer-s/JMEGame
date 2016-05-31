@@ -17,6 +17,8 @@ public abstract class SphereMath
         d.y = radius * cos(phi);
         d.z = radius * sin(theta) * sin(phi);
         
+        System.out.printf("[SphereMath] Input (phi,theta)=(%f,%f) with radius %f. Output vertex: %s.%n", phi, theta, radius, d);
+        
         return d;
     }
 }

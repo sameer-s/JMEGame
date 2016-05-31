@@ -15,11 +15,6 @@ import com.jme3.scene.VertexBuffer;
 import com.jme3.util.BufferUtils;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
-import java.util.function.IntBinaryOperator;
-import java.util.function.IntSupplier;
-import java.util.function.UnaryOperator;
-import mygame.util.SphereMath;
 
 /**
  *
@@ -37,105 +32,105 @@ public class Planet extends Geometry
         
         mesh = new Mesh();
         
-        final float n = source.getPrecision(true);
-        final float vPrecision = source.getPrecision(false);
-        
         List<Vector3f> vertices = new ArrayList<>();
         List<ColorRGBA> colors = new ArrayList<>();
         List<Integer> indices = new ArrayList<>();
         List<Vector3f> normals = new ArrayList<>();
-       
-        final float a = (4 - 4*n) / FastMath.sqr(FastMath.PI);
-        final float b = (4*n - 4) / FastMath.PI;
-        UnaryOperator<Float> getHPrecision = (phi) -> (a * phi * phi) + (b * phi) + 1;
         
-        // Defines a function for converting a theta and phi index into one overall index
-//        IntBinaryOperator getIndex = (t, p) -> (t * phiIter) + p;
-        IntBinaryOperator getIndex = (t, p) -> {
-            int sum = 0;
-            for(float phi = 0; phi < FastMath.PI - vPrecision; phi += vPrecision)
-            {
-                sum += (int) FastMath.ceil(FastMath.TWO_PI / getHPrecision.apply(phi));
-            }
-            return sum;
-        };
-       
-        final int thetaIter = (int) (FastMath.PI / n);
-        if(Math.random() < 2) throw new RuntimeException("TODO");
+        DataSource rSource = new DataSource(source);
+        rSource.regularize();
         
-        final int phiIter = (int) (FastMath.PI / vPrecision);           
+        final int centerRowLength = source.getRow(source.getRowCount() / 2).length;
 
-        for(float phi = 0; phi < FastMath.PI; phi += vPrecision)
+        for(int i = 0; i < source.getRowCount(); i++)
         {
-            for(float theta = 0; theta < FastMath.TWO_PI; theta += getHPrecision.apply(theta))
+            final float[] row = source.getRow(i);
+            final float[] rRow = rSource.getRow(i);
+            
+            final float n = (radius * row.length) / (centerRowLength);
+            
+            final int ySign = i > source.getRowCount()/2 ? -1 : 1;
+            final float y = ySign * FastMath.sqrt(FastMath.sqr(radius) - FastMath.sqr(n));
+            
+            final float r = FastMath.sqrt(FastMath.sqr(radius) - FastMath.sqr(y));
+            
+            for(int j = 0; j < rRow.length; j++)
             {
-                final float adjustedRadius = source.getRadius(phi, theta, radius);
-                vertices.add(SphereMath.getCoords(phi, theta, adjustedRadius));
-                                
-//                final float index = ((phi / vPrecision) * thetaIter) + (theta / hPrecision);
-//                final float cVal = (index) / ((float)(thetaIter * phiIter));
-//                colors.add(new ColorRGBA(cVal, 0f, 1 - cVal, 1f));  
-
-                colors.add(color.getColor(adjustedRadius, radius));
+                final float theta = (j + 1) * (FastMath.TWO_PI / rRow.length);
+                Vector3f vertex = new Vector3f();
+                vertex.x = r * FastMath.cos(theta);
+                vertex.y = y;
+                vertex.z = r * FastMath.sin(theta);
+                vertex.multLocal(rRow[j]);
+                vertices.add(vertex);
                 
-            }
-        }
-       
-        
-        for(int t = 0; t < thetaIter; t++)
-        {
-            for(int p = 0; p < phiIter; p++)
-            {
-                int i1 = getIndex.applyAsInt(t, p);
-                int i2 = getIndex.applyAsInt((t + 1) % thetaIter, p);
-                int i3 = getIndex.applyAsInt((t + 1) % thetaIter, p + 1);
-                int i4 = getIndex.applyAsInt(t, p + 1);
-                   
-                if(p != phiIter - 1)
-                {
-                    indices.add(i1);
-                    indices.add(i2);
-                    indices.add(i3);
-                    indices.add(i1);
-                    indices.add(i3);
-                    indices.add(i4);
-                }
-                else
-                {
-                    i3 = 1;
-                    i4 = 0;
-                }
-                
-                                                                                                                                                ut.println(p + " " + i1 + " " + i2 + " " + i3 + " " + i4 + " ");
-                Vector3f v1 = vertices.get(i1);
-                Vector3f v2 = vertices.get(i2);
-                Vector3f v3 = vertices.get(i3);
-                Vector3f v4 = vertices.get(i4);
-
-                Vector3f normal;
-                Vector3f t1, t2, t3, t4;
-                Vector3f n1, n2, n3, n4;
-
-                t1 = v1.subtract(v1);
-                t2 = v2.subtract(v3);
-                t3 = v3.subtract(v4);
-                t4 = v4.subtract(v1);
-
-                n1 = t1.cross(t2).normalize();
-                n2 = t2.cross(t3).normalize();
-                n3 = t3.cross(t4).normalize();
-                n4 = t4.cross(t1).normalize();
-
-                normal = n1.add(n2).add(n3).add(n4).normalize();
-                normals.add(normal);
+                colors.add(color.getColor(rRow[j]));
             }
         }
                 
-//        mesh.setMode(Mesh.Mode.Lines);
+        for(int i = 0; i < vertices.size(); i++)
+        {
+            int i2 = i + 1, i3 = i + centerRowLength, i4 = i3 + 1;
+            
+            if(i2 >= vertices.size() || i3 >= vertices.size() || i4 >= vertices.size()) continue;
+
+            indices.add(i);
+            indices.add(i2);
+            indices.add(i3);   
+
+            indices.add(i2);
+            indices.add(i3);
+            indices.add(i4);
+            
+            // https://www.opengl.org/wiki/Calculating_a_Surface_Normal
+            Vector3f u = vertices.get(i2).subtract(vertices.get(i));
+            Vector3f v = vertices.get(i3).subtract(vertices.get(i));
+            
+            normals.add(u.cross(v));
+        }
+        
+        vertices.add(new Vector3f(0, radius * source.nPole, 0));
+        vertices.add(new Vector3f(0, -radius * source.sPole, 0));
+        colors.add(color.getColor(source.nPole));
+//        colors.add(ColorRGBA.Red);
+        colors.add(color.getColor(source.sPole));
+          
+        for(int i = 0; i < vertices.size() - 2; i++)
+        {
+            int i2, i3;
+            
+            if(i / centerRowLength == 0)
+            {
+                i2 = (i + 1) % centerRowLength;
+                i3 = vertices.size() - 2;
+            }
+            else if(i / centerRowLength == source.getRowCount() - 1)
+            {
+                continue;
+            }
+            else continue;
+            
+            System.out.printf("%d %d %d%n", i, i2, i3);
+            indices.add(i);
+            indices.add(i2);
+            indices.add(i3);
+            
+            Vector3f u = vertices.get(i2).subtract(vertices.get(i));
+            Vector3f v = vertices.get(i3).subtract(vertices.get(i));
+            
+            normals.add(u.cross(v));
+        }
+        
+        indices.add(vertices.size() - 2);
+        indices.add(centerRowLength - 1);
+        indices.add(centerRowLength);
+        
         mesh.setBuffer(VertexBuffer.Type.Position, 3, BufferUtils.createFloatBuffer(vertices.toArray(new Vector3f[vertices.size()])));
         mesh.setBuffer(VertexBuffer.Type.Color, 4, BufferUtils.createFloatBuffer(colors.toArray(new ColorRGBA[colors.size()])));
         mesh.setBuffer(VertexBuffer.Type.Index, 1, BufferUtils.createIntBuffer(indices.stream().mapToInt(i->i).toArray()));
         mesh.setBuffer(VertexBuffer.Type.Normal, 3, BufferUtils.createFloatBuffer(normals.toArray(new Vector3f[normals.size()])));
+        
+        mesh.setStatic();
         mesh.updateBound();
         
         
@@ -180,5 +175,7 @@ public class Planet extends Geometry
                 mesh.setMode(Mesh.Mode.Points);
                 break;
         }
+        
+        System.out.printf("Toggled Planet \"%s\" mesh to \"%s\" mode.%n", name, mesh.getMode().name());
     }
 }

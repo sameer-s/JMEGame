@@ -12,7 +12,6 @@ import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
-import com.jme3.terrain.geomipmap.TerrainQuad;
 import com.jme3.terrain.heightmap.AbstractHeightMap;
 import com.jme3.terrain.heightmap.ImageBasedHeightMap;
 import com.jme3.texture.Texture;
@@ -23,11 +22,10 @@ import org.lwjgl.input.Keyboard;
  
 public class PlanetMain2 extends SimpleApplication
 {
-    private TerrainQuad[] terrain = new TerrainQuad[6];
     Material mat;
      
     public static void main(String[] args)
-    {
+    {                   
         PlanetMain2 app = new PlanetMain2();
         app.start();
     }
@@ -41,7 +39,7 @@ public class PlanetMain2 extends SimpleApplication
         cam.setFrustumFar(3000f);
         
         DirectionalLight sun = new DirectionalLight();
-        sun.setDirection((new Vector3f(-0.5f, -0.5f, -0.5f)).normalizeLocal());
+        sun.setDirection((new Vector3f(-0.5f, -0.5f, -0.5f)).normalizeLocal().negate());
         sun.setColor(ColorRGBA.White.mult(2f));
         rootNode.addLight(sun); 
         
@@ -80,15 +78,16 @@ public class PlanetMain2 extends SimpleApplication
             throw new RuntimeException(e);
         }
         
-        DataSource source = DataSource.HEIGHTMAP(map, .25f);
-        source = DataSource.FLAT;
+//        DataSource source = DataSource.HEIGHTMAP(map, .25f);
+//        source = DataSource.FLAT;
+
+        DataSource source = DataSource.FLAT;
         
         Planet planet = new Planet("Planet", source, 250f, assetManager, ColoringAgent.DICOLOR, true);
         planet.toggleDebug();
         planet.addDebugTriggers(inputManager, new KeyTrigger(Keyboard.KEY_P), new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
         
         rootNode.attachChild(planet);
-        
         
         ChaseCamera chaseCam = new ChaseCamera(cam, planet, inputManager);
         chaseCam.setDefaultDistance(800);
