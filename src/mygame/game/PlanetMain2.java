@@ -38,13 +38,15 @@ public class PlanetMain2 extends SimpleApplication
         
         cam.setFrustumFar(3000f);
         
+        
         DirectionalLight sun = new DirectionalLight();
-        sun.setDirection((new Vector3f(-0.5f, -0.5f, -0.5f)).normalizeLocal().negate());
+        sun.setDirection((new Vector3f(-0.5f, -0.5f, -0.5f)).normalizeLocal());
+//        sun.setDirection((new Vector3f(-0.5f, -0.5f, -0.5f)).normalizeLocal().negate());
         sun.setColor(ColorRGBA.White.mult(2f));
         rootNode.addLight(sun); 
         
         AmbientLight ambient = new AmbientLight();
-        ambient.setColor(ColorRGBA.White.mult(.1f));
+        ambient.setColor(ColorRGBA.White.mult(.2f));
         rootNode.addLight(ambient);  
         
         AbstractHeightMap map;
@@ -81,9 +83,9 @@ public class PlanetMain2 extends SimpleApplication
 //        DataSource source = DataSource.HEIGHTMAP(map, .25f);
 //        source = DataSource.FLAT;
 
-        DataSource source = DataSource.FLAT;
+        DataSource source = DataSource.SAMPLE;
         
-        Planet planet = new Planet("Planet", source, 250f, assetManager, ColoringAgent.DICOLOR, true);
+        Planet planet = new Planet("Planet", source, 250f, assetManager, ColoringAgent.DICOLOR, !true);
         planet.toggleDebug();
         planet.addDebugTriggers(inputManager, new KeyTrigger(Keyboard.KEY_P), new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
         

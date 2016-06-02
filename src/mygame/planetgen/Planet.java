@@ -49,9 +49,9 @@ public class Planet extends Geometry
             
             final float n = (radius * row.length) / (centerRowLength);
             
-            final int ySign = i > source.getRowCount()/2 ? -1 : 1;
+            final int ySign = i > source.getRowCount() / 2 ? -1 : 1;
             final float y = ySign * FastMath.sqrt(FastMath.sqr(radius) - FastMath.sqr(n));
-            
+           
             final float r = FastMath.sqrt(FastMath.sqr(radius) - FastMath.sqr(y));
             
             for(int j = 0; j < rRow.length; j++)
@@ -94,10 +94,14 @@ public class Planet extends Geometry
         colors.add(color.getColor(source.nPole));
 //        colors.add(ColorRGBA.Red);
         colors.add(color.getColor(source.sPole));
+        
+        System.out.println(source.nPole + " " + source.sPole);
           
         for(int i = 0; i < vertices.size() - 2; i++)
         {
-            int i2, i3;
+            
+            int i1 = i, i2, i3;
+            
             
             if(i / centerRowLength == 0)
             {
@@ -106,11 +110,30 @@ public class Planet extends Geometry
             }
             else if(i / centerRowLength == source.getRowCount() - 1)
             {
-                continue;
+                i2 = i + 1;
+                if(i2 >= vertices.size() - 2) i2 -= centerRowLength;
+                i3 = vertices.size() - 1;
+                
+//                continue;
             }
             else continue;
             
-            System.out.printf("%d %d %d%n", i, i2, i3);
+            indices.add(i1);
+            indices.add(i2);
+            indices.add(i3);
+            
+            Vector3f u = vertices.get(i2).subtract(vertices.get(i1));
+            Vector3f v = vertices.get(i3).subtract(vertices.get(i1));
+           
+            normals.add(u.cross(v));
+        }
+        
+        // Missing Triangle #1
+        {
+            int i = vertices.size() - 2,
+               i2 = centerRowLength - 1,
+               i3 = centerRowLength;
+        
             indices.add(i);
             indices.add(i2);
             indices.add(i3);
@@ -121,10 +144,23 @@ public class Planet extends Geometry
             normals.add(u.cross(v));
         }
         
-        indices.add(vertices.size() - 2);
-        indices.add(centerRowLength - 1);
-        indices.add(centerRowLength);
+        // Missing Triangle #2
+        {
+            int i = vertices.size() - 1,
+               i2 = vertices.size() - centerRowLength - 4,
+               i3 = vertices.size() - centerRowLength - 3;
         
+            indices.add(i);
+            indices.add(i2);
+            indices.add(i3);
+            
+            Vector3f u = vertices.get(i2).subtract(vertices.get(i));
+            Vector3f v = vertices.get(i3).subtract(vertices.get(i));
+            
+            normals.add(v.cross(u));
+        }
+        
+//        vertices.stream().forEach(v->System.out.println(v));
         mesh.setBuffer(VertexBuffer.Type.Position, 3, BufferUtils.createFloatBuffer(vertices.toArray(new Vector3f[vertices.size()])));
         mesh.setBuffer(VertexBuffer.Type.Color, 4, BufferUtils.createFloatBuffer(colors.toArray(new ColorRGBA[colors.size()])));
         mesh.setBuffer(VertexBuffer.Type.Index, 1, BufferUtils.createIntBuffer(indices.stream().mapToInt(i->i).toArray()));

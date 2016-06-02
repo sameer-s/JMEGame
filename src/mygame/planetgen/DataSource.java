@@ -1,7 +1,14 @@
 package mygame.planetgen;
 
+import java.awt.image.BufferedImage;
+import java.awt.image.Raster;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
+import javax.imageio.ImageIO;
 import mygame.util.ArrayUtils;
 
 /**
@@ -12,6 +19,8 @@ public class DataSource implements Iterable<float[]>
 {
     private float[][] data;
     public float nPole = 1f, sPole = 1f;
+    
+    private boolean isRegular = false;
     
     public DataSource()
     {
@@ -40,39 +49,6 @@ public class DataSource implements Iterable<float[]>
         if(data.length % 2 == 0) 
         {
             throw new IllegalArgumentException("DataSource data must have an odd number of rows.");
-        }
-        
-        for(int i = 0; i < data.length / 2; i++)
-        {
-            if(data[i].length > data[i + 1].length)
-            {
-                throw new IllegalArgumentException("The arrays above the center in DataSource data must be increasing in length.");
-            }
-        }
-                
-        for(int i = (data.length / 2) + 1; i < data.length; i++)
-        {
-            if(data[i].length > data[i - 1].length)
-            {
-                throw new IllegalArgumentException("The arrays below the center in DataSource data must be decreasing in length.");  
-            }
-        }
-        
-        for(int i = 0; i < data.length / 2; i++)
-        {            
-            if(data[i].length != data[data.length - i - 1].length)
-            {
-                throw new IllegalArgumentException("The length of the arrays in DataSource data must be symmetrical across the center.");
-            }
-        }
-        
-        for(int i = 0; i < data.length / 2; i++)
-        {            
-            if((data[i].length % 2) != (data[data.length / 2].length % 2))
-            {
-                String eo = data[data.length / 2].length % 2 == 0 ? "even" : "odd";
-                throw new IllegalArgumentException(String.format("Since the center row is of %s length, all other rows must be of %s length as well (data[%d].length=%d)", eo, eo, i, data[i].length));
-            }
         }
         
         this.data = data;
@@ -135,21 +111,42 @@ public class DataSource implements Iterable<float[]>
     
     public void regularize()
     {
+        if(isRegular) return;
+        
+        isRegular = true;
+        
         int centerRowLength = data[data.length / 2].length;
         
         for(int i = 0; i < data.length; i++)
         {
             int length = data[i].length;
+
+            if(length % 2 != centerRowLength % 2)
+            {
+                data[i] = ArrayUtils.makeOneLonger(data[i]);
+            }
+            
             while(length != centerRowLength)
             {
+                if(length > centerRowLength)
+                {
+                    data[i] = Arrays.copyOf(data[i], centerRowLength);
+                    break;
+                }
+                
                 data[i] = ArrayUtils.stretchArray(data[i]);
                 length = data[i].length;
             }
         }
     }
     
-    public static final DataSource FLAT = new DataSource();
+    public void setData(int r, int c, int val)
+    {
+        
+    }
     
+    public static final DataSource FLAT = new DataSource();
+
     static
     {
         float[][] data = new float[127][0];
@@ -161,6 +158,51 @@ public class DataSource implements Iterable<float[]>
         }
         
         FLAT.setData(data);
+    }
+
+    public static final DataSource SAMPLE = new DataSource();
+    
+    static
+    {
+        System.out.println("Loading sample image");
+        
+        try
+        {            
+            BufferedImage image = ImageIO.read(new File("sample.png"));
+            Raster raster = image.getData();
+         
+            final int w = raster.getWidth(), h = raster.getHeight(), nb = raster.getNumBands();
+            float[][] data = new float[w][];
+            
+            for(int x = 0; x < w; x++)
+            {
+                List<Integer> pixels = new ArrayList<>();
+                for(int y = 0; y < h; y++)
+                {
+                    int[] pixel = raster.getPixel(x, y, (int[]) null);
+                
+                    if(pixel[1] == 0)
+                    {
+                        pixels.add(pixel[0]);
+                    }
+                }
+                data[x] = new float[pixels.size()];
+                
+                for(int i = 0; i < pixels.size(); i++)
+                {
+                    data[x][i] = 1 + (.1f * ((pixels.get(i) - 127) / 127f));
+                }
+            }
+
+            System.out.println(data[255].length);
+            SAMPLE.setData(data);
+            
+            System.out.println("Sample image loaded");
+        }
+        catch(IOException e)
+        {
+            System.err.println("Unable to load sample.png into the SAMPLE DataSource.");
+        }
     }
 
     @Override
