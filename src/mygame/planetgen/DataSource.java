@@ -166,9 +166,11 @@ public class DataSource implements Iterable<float[]>
     {
         System.out.println("Loading sample image");
         
+        final float sensitivity = 0.05f;
+        
         try
         {            
-            BufferedImage image = ImageIO.read(new File("sample.png"));
+            BufferedImage image = ImageIO.read(new File("sample4.png"));
             Raster raster = image.getData();
          
             final int w = raster.getWidth(), h = raster.getHeight(), nb = raster.getNumBands();
@@ -181,7 +183,7 @@ public class DataSource implements Iterable<float[]>
                 {
                     int[] pixel = raster.getPixel(x, y, (int[]) null);
                 
-                    if(pixel[1] == 0)
+                    if(!(pixel[0] == 0 && pixel[1] == 255 && pixel[2] == 0))
                     {
                         pixels.add(pixel[0]);
                     }
@@ -190,7 +192,9 @@ public class DataSource implements Iterable<float[]>
                 
                 for(int i = 0; i < pixels.size(); i++)
                 {
-                    data[x][i] = 1 + (.1f * ((pixels.get(i) - 127) / 127f));
+                    data[x][i] = 1 + (sensitivity * ((pixels.get(i) - 127) / 127f));
+                    
+//                    System.out.println(data[x][i]); // FIXME print statements cause major lag
                 }
             }
 

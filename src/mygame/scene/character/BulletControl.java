@@ -5,7 +5,7 @@ import com.jme3.bullet.control.GhostControl;
 import com.jme3.math.Vector3f;
 import java.util.HashMap;
 import java.util.Map;
-import mygame.game.PlanetMain_Buggy;
+import mygame.game.Main;
 import mygame.scene.DestructibleGameObject;
 
 /**
@@ -36,7 +36,7 @@ public class BulletControl extends GhostControl implements DestructibleGameObjec
     @Override
     public void destroyGameObject(Map<String, Object> data)
     {
-
+        Main.instance.removeSpatial(spatial);
     }
 
     @Override
@@ -49,6 +49,14 @@ public class BulletControl extends GhostControl implements DestructibleGameObjec
     }
 
     @Override
+    public boolean shouldBeDestroyed(Map<String, Object> data)
+    {
+        return !(data.getOrDefault("ObjectType", "No Type").equals("Player") &&
+                data.getOrDefault("PlayerCode", "No Code").equals(playerCode));
+    }
+
+    
+    @Override
     public void update(float tpf)
     {
         super.update(tpf);
@@ -57,7 +65,7 @@ public class BulletControl extends GhostControl implements DestructibleGameObjec
 
         if(ttl <= 0)
         {
-            PlanetMain_Buggy.instance.removeSpatial(spatial);
+            Main.instance.removeSpatial(spatial);
         }
 
         this.spatial.setLocalTranslation(this.spatial.getLocalTranslation().add(movementVector));

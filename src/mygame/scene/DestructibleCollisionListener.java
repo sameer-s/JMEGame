@@ -16,8 +16,6 @@ public class DestructibleCollisionListener implements PhysicsCollisionListener
         PhysicsCollisionObject nodeA = event.getObjectA(),
                                nodeB = event.getObjectB();
 
-        System.out.println(nodeA + " " + nodeB);
-
         if(nodeA instanceof DestructibleGameObject && nodeB instanceof DestructibleGameObject)
         {
             DestructibleGameObject dgoA = (DestructibleGameObject) nodeA;

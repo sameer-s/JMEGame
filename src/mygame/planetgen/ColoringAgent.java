@@ -14,7 +14,7 @@ public interface ColoringAgent
     
     public static ColoringAgent OCEAN = factor -> OCEAN_COLOR;
     public static ColoringAgent DICOLOR = factor -> {
-        if(factor > 1.02f) return new ColorRGBA(.2f, .3f, .05f, 1f);
+        if(factor > 1.04f) return new ColorRGBA(.2f, .3f, .05f, 1f);
         else return OCEAN_COLOR;
     };
 }

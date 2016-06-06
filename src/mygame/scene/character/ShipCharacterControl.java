@@ -28,7 +28,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.function.Consumer;
 import mygame.game.Main;
-import mygame.game.PlanetMain_Buggy;
 import mygame.scene.DestructibleGameObject;
 import mygame.util.Recursive;
 import org.lwjgl.input.Keyboard;
@@ -77,8 +76,8 @@ public class ShipCharacterControl extends GhostControl implements ActionListener
         }
 
         trail = new ParticleEmitter("Emitter", ParticleMesh.Type.Triangle, 30);
-        Material fireMat = new Material(PlanetMain_Buggy.instance.getAssetManager(), "Common/MatDefs/Misc/Particle.j3md");
-        fireMat.setTexture("Texture", PlanetMain_Buggy.instance.getAssetManager().loadTexture("Effects/Explosion/flash.png"));
+        Material fireMat = new Material(Main.instance.getAssetManager(), "Common/MatDefs/Misc/Particle.j3md");
+        fireMat.setTexture("Texture", Main.instance.getAssetManager().loadTexture("Effects/Explosion/flash.png"));
         trail.setMaterial(fireMat);
         trail.setImagesX(2); trail.setImagesY(2);
         trail.setEndColor(endColor);
@@ -215,7 +214,7 @@ public class ShipCharacterControl extends GhostControl implements ActionListener
         Geometry bullet = new Geometry("bullet" + bulletNum++, new Box(size.x, size.y, size.z));
         bullet.setLocalTranslation(this.spatial.getLocalTranslation().add(0, -1.5f, 0));
 
-        Material mat = new Material(PlanetMain_Buggy.instance.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
+        Material mat = new Material(Main.instance.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
         mat.setColor("Color", ColorRGBA.Red);
 
         bullet.setMaterial(mat);
@@ -226,13 +225,13 @@ public class ShipCharacterControl extends GhostControl implements ActionListener
 
         bullet.setLocalRotation(this.spatial.getLocalRotation());
 
-        PlanetMain_Buggy.instance.addSpatial(bullet, bulletControl);
+        Main.instance.addSpatial(bullet, bulletControl);
     }
 
     @Override
     public void destroyGameObject(Map<String, Object> data)
     {
-        PlanetMain_Buggy.instance.enqueue(() -> {
+        Main.instance.enqueue(() -> {
 //            PlanetMain.instance.playerLoses(playerCode);
 
             try
@@ -251,8 +250,8 @@ public class ShipCharacterControl extends GhostControl implements ActionListener
                 }
 
                 ParticleEmitter fireEffect = new ParticleEmitter("Emitter", ParticleMesh.Type.Triangle, 30);
-                Material fireMat = new Material(PlanetMain_Buggy.instance.getAssetManager(), "Common/MatDefs/Misc/Particle.j3md");
-                fireMat.setTexture("Texture", PlanetMain_Buggy.instance.getAssetManager().loadTexture("Effects/Explosion/flame.png"));
+                Material fireMat = new Material(Main.instance.getAssetManager(), "Common/MatDefs/Misc/Particle.j3md");
+                fireMat.setTexture("Texture", Main.instance.getAssetManager().loadTexture("Effects/Explosion/flame.png"));
                 fireEffect.setMaterial(fireMat);
                 fireEffect.setImagesX(2); fireEffect.setImagesY(2);
                 fireEffect.setEndColor(endColor);
@@ -265,11 +264,11 @@ public class ShipCharacterControl extends GhostControl implements ActionListener
                 fireEffect.setHighLife(.5f);
                 fireEffect.setLocalTranslation(spatial.getLocalTranslation());
                 fireEffect.getParticleInfluencer().setVelocityVariation(1f);
-                PlanetMain_Buggy.instance.getRootNode().attachChild(fireEffect);
+                Main.instance.getRootNode().attachChild(fireEffect);
 
                 ParticleEmitter debrisEffect = new ParticleEmitter("Debris", ParticleMesh.Type.Triangle, 10);
-                Material debrisMat = new Material(PlanetMain_Buggy.instance.getAssetManager(), "Common/MatDefs/Misc/Particle.j3md");
-                debrisMat.setTexture("Texture", PlanetMain_Buggy.instance.getAssetManager().loadTexture("Effects/Explosion/Debris.png"));
+                Material debrisMat = new Material(Main.instance.getAssetManager(), "Common/MatDefs/Misc/Particle.j3md");
+                debrisMat.setTexture("Texture", Main.instance.getAssetManager().loadTexture("Effects/Explosion/Debris.png"));
                 debrisEffect.setMaterial(debrisMat);
                 debrisEffect.setImagesX(3); debrisEffect.setImagesY(3);
                 debrisEffect.setRotateSpeed(4);
@@ -279,7 +278,7 @@ public class ShipCharacterControl extends GhostControl implements ActionListener
                 debrisEffect.setGravity(0f,6f,0f);
                 debrisEffect.setLocalTranslation(spatial.getLocalTranslation());
                 debrisEffect.getParticleInfluencer().setVelocityVariation(1f);
-                PlanetMain_Buggy.instance.getRootNode().attachChild(debrisEffect);
+                Main.instance.getRootNode().attachChild(debrisEffect);
                 debrisEffect.emitAllParticles();
 
                 Timer t = new Timer();
@@ -287,18 +286,16 @@ public class ShipCharacterControl extends GhostControl implements ActionListener
                     @Override
                     public void run()
                     {
-                        PlanetMain_Buggy.instance.removeSpatial(fireEffect);
-                        PlanetMain_Buggy.instance.removeSpatial(debrisEffect);
+                        Main.instance.removeSpatial(fireEffect);
+                        Main.instance.removeSpatial(debrisEffect);
                     }
                 }, 1500L);
 
 
                 spatial.removeFromParent();
-                PlanetMain_Buggy.instance.getStateManager().getState(BulletAppState.class).getPhysicsSpace().remove(spatial);
+                Main.instance.getStateManager().getState(BulletAppState.class).getPhysicsSpace().remove(spatial);
 
                 spatial.removeControl(this);
-
-                spatial = null;
             }
             catch(NullPointerException npe) {}
 
@@ -318,6 +315,7 @@ public class ShipCharacterControl extends GhostControl implements ActionListener
     {
         HashMap info = new HashMap<>();
         info.put("ObjectType", "Player");
+        info.put("PlayerCode", playerCode);
         return info;
     }
 }
